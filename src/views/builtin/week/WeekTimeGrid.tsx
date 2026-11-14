@@ -8,6 +8,7 @@ import {
   formatWallclockTime,
   formatWeekday,
   type TimeFormat,
+  Tooltip,
   useDayGrid,
   useDisplaySettings,
   useNavigation,
@@ -21,7 +22,9 @@ import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
 import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
+import { useGutterZones } from "./useGutterZones"
 import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
+import { type GutterZone, hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
 
 type WeekTimeGridProps = {
   span: Span
@@ -49,6 +52,8 @@ export function WeekTimeGrid({
   const { timeFormat, firstDayOfWeek } = useDisplaySettings()
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
+  const zones = useGutterZones()
+  const gutterWidth = zones.length * GUTTER_WIDTH
 
   const activeDateKey = activeDate.toString()
   // A day on its own is always the active one, so marking it selected says nothing.
@@ -99,9 +104,9 @@ export function WeekTimeGrid({
     const el = scrollContainerRef.current
     if (!el) return
 
-    const columnLeft = GUTTER_WIDTH + (epochDay(activeDate) - epochDay(origin)) * dayWidth
+    const columnLeft = gutterWidth + (epochDay(activeDate) - epochDay(origin)) * dayWidth
     const columnRight = columnLeft + dayWidth
-    const viewportLeft = el.scrollLeft + GUTTER_WIDTH
+    const viewportLeft = el.scrollLeft + gutterWidth
     const viewportRight = el.scrollLeft + el.clientWidth
 
     if (originChanged || columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
@@ -122,17 +127,22 @@ export function WeekTimeGrid({
     revealActiveDate()
   })
 
-  const trackWidth = GUTTER_WIDTH + TRACK_DAYS * dayWidth
-  const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
+  const trackWidth = gutterWidth + TRACK_DAYS * dayWidth
+  const dayGridCols = `${gutterWidth}px repeat(${N}, ${dayWidth}px)`
   // The rendered days, at their own offset on the track.
-  const windowBox = { marginLeft: startIndex * dayWidth, width: GUTTER_WIDTH + N * dayWidth }
+  const windowBox = { marginLeft: startIndex * dayWidth, width: gutterWidth + N * dayWidth }
 
   return (
     <div
       ref={scrollContainerRef}
       data-slot="week-scroll"
       data-span={span}
-      style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as CSSProperties}
+      style={
+        {
+          "--week-hour-height": `${HOUR_HEIGHT}px`,
+          "--week-gutter-width": `${gutterWidth}px`,
+        } as CSSProperties
+      }
       className={cn(
         "h-full w-full min-w-0",
         // A day never rests between two days: only navigation moves it sideways.
@@ -164,7 +174,10 @@ export function WeekTimeGrid({
               data-slot="week-header-gutter"
               className="sticky left-0 z-30 bg-background border-r border-b border-border"
               style={{ gridColumn: 1, gridRow: "1 / -1" }}
-            />
+            >
+              {/* One zone needs no name: every time on screen is in it. */}
+              {zones.length > 1 && <ZoneLabels zones={zones} date={activeDate} />}
+            </div>
             <DayHeaders
               days={days}
               span={span}
@@ -208,7 +221,7 @@ export function WeekTimeGrid({
             data-slot="week-time-gutter"
             className="sticky left-0 z-10 bg-background border-r border-border"
           >
-            <TimeGutter timeFormat={timeFormat} />
+            <TimeGutter zones={zones} date={activeDate} viewerTzid={tzid} timeFormat={timeFormat} />
           </div>
           {days.map((day) => (
             <div
@@ -245,22 +258,73 @@ export function WeekTimeGrid({
   )
 }
 
-function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
+const formatZoneHour = ({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) =>
+  formatWallclockTime(hour, minute, format)
+
+/**
+ * One column of hour labels per zone. The grid's hours are the viewer's; the other zones
+ * read them as they fall on `date`, since a zone's offset can change from one day to the next.
+ */
+function TimeGutter({
+  zones,
+  date,
+  viewerTzid,
+  timeFormat,
+}: {
+  zones: GutterZone[]
+  date: Temporal.PlainDate
+  viewerTzid: string
+  timeFormat: TimeFormat
+}) {
   return (
-    <div className="relative" style={{ height: GRID_HEIGHT }}>
-      {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => {
-        return (
+    <div className="flex" style={{ height: GRID_HEIGHT }}>
+      {zones.map(({ tzid, local }) => (
+        <div
+          key={tzid}
+          data-slot="week-time-zone"
+          data-local={local || undefined}
+          className="relative"
+          style={{ width: GUTTER_WIDTH }}
+        >
+          {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
+            <span
+              key={hour}
+              data-slot="week-hour-label"
+              data-typography="numerical"
+              className={cn(
+                "absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none whitespace-nowrap",
+                !local && "opacity-70",
+              )}
+              style={{ top: hour * HOUR_HEIGHT }}
+            >
+              {formatZoneHour(hourInZone(date, hour, viewerTzid, tzid), timeFormat)}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Names the gutter's columns, at the height of the day headers. */
+function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.PlainDate }) {
+  return (
+    <div className="flex">
+      {zones.map(({ tzid, local }) => (
+        <Tooltip key={tzid} content={zoneDescription(tzid, date)} side="bottom">
           <span
-            key={h}
-            data-slot="week-hour-label"
-            data-typography="numerical"
-            className="absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none"
-            style={{ top: h * HOUR_HEIGHT }}
+            data-slot="week-zone-label"
+            data-local={local || undefined}
+            className={cn(
+              "h-7.5 pr-1.5 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none cursor-default",
+              !local && "opacity-70",
+            )}
+            style={{ width: GUTTER_WIDTH }}
           >
-            {formatWallclockTime(h, 0, timeFormat)}
+            {zoneAbbreviation(tzid, date)}
           </span>
-        )
-      })}
+        </Tooltip>
+      ))}
     </div>
   )
 }

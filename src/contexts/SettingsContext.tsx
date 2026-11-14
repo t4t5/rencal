@@ -3,7 +3,7 @@ import { ReactNode, useCallback, useEffect, useState } from "react"
 import { api, type CaldirSettings } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
 import type { CalendarGroups } from "@/lib/calendar-groups"
-import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
+import { type FirstDayOfWeek, normalizeExtraTimeZones, type TimeFormat } from "@/lib/event-time"
 import { createStrictContext } from "@/lib/strict-context"
 
 interface SettingsContextType {
@@ -13,6 +13,9 @@ interface SettingsContextType {
   setFirstDayOfWeek: (day: FirstDayOfWeek) => Promise<void>
   showWeekNumbers: boolean
   setShowWeekNumbers: (show: boolean) => Promise<void>
+  // Timezones the day and week views show next to the viewer's own.
+  extraTimeZones: string[]
+  setExtraTimeZones: (zones: string[]) => Promise<void>
   defaultReminders: number[]
   setDefaultReminders: (mins: number[]) => Promise<void>
   defaultCalendar: string | null
@@ -40,6 +43,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [timeFormat, setTimeFormatState] = useState<TimeFormat>("24h")
   const [firstDayOfWeek, setFirstDayOfWeekState] = useState<FirstDayOfWeek>("monday")
   const [showWeekNumbers, setShowWeekNumbersState] = useState<boolean>(false)
+  const [extraTimeZones, setExtraTimeZonesState] = useState<string[]>([])
   const [defaultReminders, setDefaultRemindersState] = useState<number[]>([])
   const [defaultCalendar, setDefaultCalendarState] = useState<string | null>(null)
   const [calendarDir, setCalendarDirState] = useState<string>("")
@@ -57,19 +61,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const reloadSettings = useCallback(async () => {
     try {
-      const [caldir, notifs, autoSync, firstDay, weekNumbers, groupsResult] = await Promise.all([
-        api.settings.getCaldirSettings(),
-        api.settings.getNotificationsEnabled(),
-        api.settings.getAutoSyncEnabled(),
-        api.settings.getFirstDayOfWeek(),
-        api.settings.getShowWeekNumbers(),
-        api.settings.getCalendarGroups(),
-      ])
+      const [caldir, notifs, autoSync, firstDay, weekNumbers, zones, groupsResult] =
+        await Promise.all([
+          api.settings.getCaldirSettings(),
+          api.settings.getNotificationsEnabled(),
+          api.settings.getAutoSyncEnabled(),
+          api.settings.getFirstDayOfWeek(),
+          api.settings.getShowWeekNumbers(),
+          api.settings.getExtraTimeZones(),
+          api.settings.getCalendarGroups(),
+        ])
       applyCaldirSettings(caldir)
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
       setFirstDayOfWeekState(firstDay)
       setShowWeekNumbersState(weekNumbers)
+      // Every config change re-reads the settings: keep the array while its zones are the same.
+      setExtraTimeZonesState((current) =>
+        current.length === zones.length && current.every((tzid, i) => tzid === zones[i])
+          ? current
+          : zones,
+      )
       setGroupsState(groupsResult)
       setSettingsLoaded(true)
     } catch (e) {
@@ -134,6 +146,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emitAppEvent("rencal-config-changed")
   }
 
+  const setExtraTimeZones = async (zones: string[]) => {
+    const next = normalizeExtraTimeZones(zones)
+    setExtraTimeZonesState(next)
+    await api.settings.setExtraTimeZones(next)
+    await emitAppEvent("rencal-config-changed")
+  }
+
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
     await api.settings.setAutoSyncEnabled(enabled)
@@ -155,6 +174,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setFirstDayOfWeek,
         showWeekNumbers,
         setShowWeekNumbers,
+        extraTimeZones,
+        setExtraTimeZones,
         defaultReminders,
         setDefaultReminders,
         defaultCalendar,

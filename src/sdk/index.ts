@@ -23,6 +23,7 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useEventsWithDrag } from "@/hooks/cal-events/useEventsWithDrag"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { elementAnchor, setEventAnchor } from "@/lib/event-anchor"
@@ -172,12 +173,19 @@ export function useCalendars(): readonly Calendar[] {
 }
 
 /**
- * The user's time format, first day of the week and whether to number weeks
- * (`isoWeekNumber`). Views mount once renCal has read them.
+ * The user's time format, first day of the week, whether to number weeks
+ * (`isoWeekNumber`), and the timezones (IANA ids, at most two) to show times in
+ * next to the viewer's own (`useViewerTzid`). Views mount once renCal has read them.
  */
 export function useDisplaySettings() {
-  const { timeFormat, firstDayOfWeek, showWeekNumbers } = useSettings()
-  return { timeFormat, firstDayOfWeek, showWeekNumbers }
+  const { timeFormat, firstDayOfWeek, showWeekNumbers, extraTimeZones: stored } = useSettings()
+  const viewerTzid = useViewerTzid()
+  // A zone the viewer is in has nothing to add next to their own.
+  const extraTimeZones: readonly string[] = useMemo(
+    () => stored.filter((tzid) => tzid !== viewerTzid),
+    [stored, viewerTzid],
+  )
+  return { timeFormat, firstDayOfWeek, showWeekNumbers, extraTimeZones }
 }
 
 /**

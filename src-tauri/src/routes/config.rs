@@ -1,7 +1,7 @@
 use crate::routes::error::RpcError;
 use std::collections::BTreeMap;
 
-use rencal_config::RencalConfig;
+use rencal_config::{MAX_EXTRA_TIME_ZONES, RencalConfig};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -104,6 +104,8 @@ pub trait ConfigApi {
     async fn set_first_day_of_week(day: FirstDayOfWeek) -> TauResult<()>;
     async fn get_show_week_numbers() -> TauResult<bool>;
     async fn set_show_week_numbers(show: bool) -> TauResult<()>;
+    async fn get_extra_time_zones() -> TauResult<Vec<String>>;
+    async fn set_extra_time_zones(zones: Vec<String>) -> TauResult<()>;
     async fn get_groups() -> TauResult<BTreeMap<String, Vec<String>>>;
     async fn set_groups(groups: BTreeMap<String, Vec<String>>) -> TauResult<()>;
 }
@@ -160,6 +162,17 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_show_week_numbers(self, show: bool) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
+        config.save().map_err(RpcError::from)
+    }
+
+    async fn get_extra_time_zones(self) -> TauResult<Vec<String>> {
+        Ok(RencalConfig::load()?.extra_time_zones)
+    }
+
+    async fn set_extra_time_zones(self, mut zones: Vec<String>) -> TauResult<()> {
+        zones.truncate(MAX_EXTRA_TIME_ZONES);
+        let mut config = RencalConfig::load()?;
+        config.extra_time_zones = zones;
         config.save().map_err(RpcError::from)
     }
 

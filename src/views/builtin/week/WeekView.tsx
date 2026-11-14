@@ -4,6 +4,7 @@ import { useEventsInRange, useNavigation } from "@/sdk"
 
 import { WeekTimeGrid } from "./WeekTimeGrid"
 import { useDayRangeLayout } from "./useDayRangeLayout"
+import { useGutterWidth } from "./useGutterZones"
 import { type Span, useDayWidth, useInfiniteDays } from "./useInfiniteDays"
 
 export function WeekView() {
@@ -18,11 +19,13 @@ export function DayView() {
 function TimeGridView({ span }: { span: Span }) {
   const { activeDate } = useNavigation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const { dayWidth, measured } = useDayWidth(scrollContainerRef, span)
+  const gutterWidth = useGutterWidth()
+  const { dayWidth, measured } = useDayWidth(scrollContainerRef, span, gutterWidth)
   const { origin, startIndex, days, start, end } = useInfiniteDays({
     scrollContainerRef,
     activeDate,
     dayWidth,
+    gutterWidth,
     span,
   })
   const events = useEventsInRange(start, end)

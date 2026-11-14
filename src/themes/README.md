@@ -513,6 +513,11 @@ backgrounds, and timed columns expose `data-selected` for the selected date and
 `data-weekend` on weekends; day numbers expose `data-today`. False states omit
 these attributes.
 
+With extra time zones set, the gutter holds one `week-time-zone` column of hour
+labels per zone and `week-header-gutter` names each with a `week-zone-label`. Both
+expose `data-local` on the viewer's own zone, the column beside the days, and
+`week-scroll` sets `--week-gutter-width` to the gutter's full width.
+
 The day view is the same grid at one day's width, with the same slots and
 `data-view="week"` on its events. `week-scroll` exposes `data-span` (`week` or
 `day`) to style the two apart.

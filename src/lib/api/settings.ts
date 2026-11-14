@@ -8,7 +8,7 @@ import { rpc } from "@/rpc"
 import type { CaldirSettings } from "@/rpc/bindings"
 
 import { normalizeCalendarGroups, type CalendarGroups } from "@/lib/calendar-groups"
-import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
+import { type FirstDayOfWeek, normalizeExtraTimeZones, type TimeFormat } from "@/lib/event-time"
 
 export type { CaldirSettings }
 
@@ -64,6 +64,15 @@ export async function setShowWeekNumbers(show: boolean): Promise<void> {
   await rpc.config.set_show_week_numbers(show)
 }
 
+/** config.toml's `extra_time_zones`, with unknown and surplus zones dropped. */
+export async function getExtraTimeZones(): Promise<string[]> {
+  return normalizeExtraTimeZones(await rpc.config.get_extra_time_zones())
+}
+
+export async function setExtraTimeZones(zones: string[]): Promise<void> {
+  await rpc.config.set_extra_time_zones(normalizeExtraTimeZones(zones))
+}
+
 /** Named calendar groups from config.toml's `[groups]` table, with malformed entries dropped. */
 export async function getCalendarGroups(): Promise<CalendarGroups> {
   return normalizeCalendarGroups(await rpc.config.get_groups())
@@ -87,6 +96,8 @@ export const settings = {
   setFirstDayOfWeek,
   getShowWeekNumbers,
   setShowWeekNumbers,
+  getExtraTimeZones,
+  setExtraTimeZones,
   getCalendarGroups,
   setCalendarGroups,
 } as const

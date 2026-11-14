@@ -2,6 +2,7 @@ import { getVersion } from "@tauri-apps/api/app"
 import { open } from "@tauri-apps/plugin-dialog"
 import { useEffect, useId, useState } from "react"
 
+import { TimeZoneLabel, TimeZonePicker } from "@/components/event-parts/inputs/TimeZonePicker"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -11,15 +12,26 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectMenuTrigger,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import type { TimeFormat } from "@/lib/event-time"
-import type { FirstDayOfWeek } from "@/lib/event-time"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
+import {
+  type EventTime,
+  type FirstDayOfWeek,
+  MAX_EXTRA_TIME_ZONES,
+  nowZoned,
+  type TimeFormat,
+  timeZoneCity,
+  timeZoneOffsetLabel,
+} from "@/lib/event-time"
 import { checkForUpdate, promptAndInstall, type Update } from "@/lib/updater"
+
+import { CloseIcon } from "@/icons/close"
 
 export function GeneralPage() {
   return (
@@ -27,6 +39,7 @@ export function GeneralPage() {
       <TimeFormatSection />
       <FirstDayOfWeekSection />
       <WeekNumbersSection />
+      <TimeZonesSection />
       <DataDirectorySection />
       <AutoSyncSection />
       <hr />
@@ -88,6 +101,92 @@ const WeekNumbersSection = () => {
         Show week numbers
       </Label>
     </div>
+  )
+}
+
+// The zones the day and week views show times in: the viewer's own, which follows the
+// system, and up to MAX_EXTRA_TIME_ZONES more.
+const TimeZonesSection = () => {
+  const { extraTimeZones, setExtraTimeZones } = useSettings()
+  const viewerTzid = useViewerTzid()
+  // Offsets as they are today.
+  const [now] = useState(nowZoned)
+  const taken = [viewerTzid, ...extraTimeZones]
+
+  return (
+    <div className="flex flex-col gap-2 w-[400px]">
+      <label className="text-sm">Time zones</label>
+      <div className="flex items-center gap-2 h-control px-2.5 text-sm">
+        <TimeZoneLabel
+          offset={timeZoneOffsetLabel(viewerTzid, now)}
+          city={timeZoneCity(viewerTzid)}
+          className="grow"
+        />
+        <span className="text-xs text-muted-foreground">Local</span>
+      </div>
+      {extraTimeZones.map((tzid, i) => (
+        <div key={tzid} className="flex gap-2">
+          <TimeZoneField
+            value={tzid}
+            at={now}
+            exclude={taken.filter((other) => other !== tzid)}
+            onSelect={(next) => void setExtraTimeZones(extraTimeZones.with(i, next))}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Remove ${timeZoneCity(tzid)}`}
+            onClick={() => void setExtraTimeZones(extraTimeZones.toSpliced(i, 1))}
+          >
+            <CloseIcon className="size-3.5" />
+          </Button>
+        </div>
+      ))}
+      {extraTimeZones.length < MAX_EXTRA_TIME_ZONES && (
+        <TimeZoneField
+          at={now}
+          exclude={taken}
+          onSelect={(next) => void setExtraTimeZones([...extraTimeZones, next])}
+        />
+      )}
+      <p className="text-xs text-muted-foreground">
+        Day and week views show these next to your local time.
+      </p>
+    </div>
+  )
+}
+
+// A zone's row, or without a value the row that adds one.
+const TimeZoneField = ({
+  value,
+  at,
+  exclude,
+  onSelect,
+}: {
+  value?: string
+  at: EventTime
+  exclude: string[]
+  onSelect: (tzid: string) => void
+}) => {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <TimeZonePicker
+      value={value}
+      at={at}
+      open={open}
+      onOpenChange={setOpen}
+      onSelect={onSelect}
+      exclude={exclude}
+    >
+      <SelectMenuTrigger variant="default" className="flex-1 min-w-0">
+        {value ? (
+          <TimeZoneLabel offset={timeZoneOffsetLabel(value, at)} city={timeZoneCity(value)} />
+        ) : (
+          <span className="text-muted-foreground">Add time zone</span>
+        )}
+      </SelectMenuTrigger>
+    </TimeZonePicker>
   )
 }
 

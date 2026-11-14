@@ -332,13 +332,15 @@ export interface Calendar {
 /** Every calendar, in the user's order. */
 export declare function useCalendars(): readonly Calendar[];
 /**
- * The user's time format, first day of the week and whether to number weeks
- * (`isoWeekNumber`). Views mount once renCal has read them.
+ * The user's time format, first day of the week, whether to number weeks
+ * (`isoWeekNumber`), and the timezones (IANA ids, at most two) to show times in
+ * next to the viewer's own (`useViewerTzid`). Views mount once renCal has read them.
  */
 export declare function useDisplaySettings(): {
 	timeFormat: TimeFormat;
 	firstDayOfWeek: FirstDayOfWeek;
 	showWeekNumbers: boolean;
+	extraTimeZones: readonly string[];
 };
 /**
  * Inline style (the source colour themes paint from) and the user's RSVP. Event
