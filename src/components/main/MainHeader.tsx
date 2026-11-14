@@ -21,8 +21,11 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useActionKeys } from "@/contexts/KeyBindingsContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { useFullscreen } from "@/hooks/useFullscreen"
+import { useSidebarCollapse } from "@/hooks/useSidebarCollapse"
 import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
+import { cn, isMacOS } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
 import type { ViewDescriptor } from "@/views/manifest"
@@ -36,10 +39,17 @@ export function MainHeader({
   onChangeCalendarView: (view: string) => void
 }) {
   const { navigateToDate } = useCalendarNavigation()
+  const { collapsed } = useSidebarCollapse()
+  const isFullscreen = useFullscreen()
 
   return (
     <div data-slot="main-toolbar" className="shrink-0 flex gap-2 p-(--layout-padding)">
-      <div className="flex gap-2 items-center">
+      {/* With the sidebar hidden, this toolbar sits under the macOS traffic lights. */}
+      <div
+        className={cn("flex gap-2 items-center", {
+          "pl-[78px]": isMacOS && collapsed && !isFullscreen,
+        })}
+      >
         <ToggleSidebarButton />
         <NewEventButton />
 
