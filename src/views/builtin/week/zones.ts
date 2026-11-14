@@ -24,13 +24,17 @@ export function hourInZone(
 const midday = (date: Temporal.PlainDate, tzid: string) =>
   date.toZonedDateTime({ timeZone: tzid, plainTime: new Temporal.PlainTime(12) })
 
-/** The zone's short name on `date`, like "PST" or "GMT+1": it changes with daylight saving. */
+/**
+ * The zone's short name on `date`, like "PST": it changes with daylight saving. A zone with no
+ * name of its own is its offset alone ("+5:30"), since "GMT+5:30" is wider than a gutter column.
+ */
 export function zoneAbbreviation(tzid: string, date: Temporal.PlainDate): string {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: tzid,
     timeZoneName: "short",
   }).formatToParts(midday(date, tzid).epochMilliseconds)
-  return parts.find((part) => part.type === "timeZoneName")?.value ?? tzid
+  const name = parts.find((part) => part.type === "timeZoneName")?.value ?? tzid
+  return name.replace(/^GMT(?=[+-])/, "")
 }
 
 /** "Los Angeles, GMT-8": the zone's city and its UTC offset on `date`. */

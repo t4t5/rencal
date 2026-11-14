@@ -37,6 +37,12 @@ describe("zone names", () => {
     expect(zoneAbbreviation("America/New_York", summer)).toBe("EDT")
   })
 
+  it("abbreviates a zone without a name to its offset", () => {
+    expect(zoneAbbreviation("Asia/Kolkata", winter)).toBe("+5:30")
+    expect(zoneAbbreviation("Europe/Paris", winter)).toBe("+1")
+    expect(zoneAbbreviation("Europe/London", winter)).toBe("GMT")
+  })
+
   it("describes the zone by city and offset", () => {
     expect(zoneDescription("America/Los_Angeles", winter)).toBe("Los Angeles, GMT-8")
     expect(zoneDescription("America/Los_Angeles", summer)).toBe("Los Angeles, GMT-7")
