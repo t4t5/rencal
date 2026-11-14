@@ -131,3 +131,6 @@ jump navigation above apply to it. It differs in two ways:
   or off the track, is jumped to without animation.
 - The user cannot scroll it sideways: a pan could rest between two days. Only the
   vertical time axis scrolls.
+- Drags cannot either (`startDragScroll` in `src/lib/event-drag.ts`). Their autoscroll
+  skips `overflow: hidden` axes, and since WebKit's own drag autoscroll ignores
+  `overflow: hidden`, a drag cancels its press's `mousedown`.

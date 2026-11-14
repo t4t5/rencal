@@ -520,7 +520,8 @@ expose `data-local` on the viewer's own zone, the column beside the days, and
 
 The day view is the same grid at one day's width, with the same slots and
 `data-view="week"` on its events. `week-scroll` exposes `data-span` (`week` or
-`day`) to style the two apart.
+`day`) to style the two apart. Its day never carries `data-selected` or
+`data-weekend`.
 
 Week events use the shared calendar-event contract above. The all-day lane
 wrapper retains `week-all-day-lane`; it is geometry rather than event paint.
