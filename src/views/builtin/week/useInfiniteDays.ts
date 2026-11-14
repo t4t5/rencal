@@ -3,8 +3,6 @@ import { type RefObject, useLayoutEffect, useMemo, useState } from "react"
 
 import { epochDay, type FirstDayOfWeek, startOfWeek, useDisplaySettings, useToday } from "@/sdk"
 
-import { GUTTER_WIDTH } from "./grid"
-
 /** Days on each side of the date the strip opened on: the scrollable track spans twice this. */
 const HALF_TRACK_DAYS = 3653
 export const TRACK_DAYS = 2 * HALF_TRACK_DAYS
@@ -75,11 +73,13 @@ export function useInfiniteDays({
   scrollContainerRef,
   activeDate,
   dayWidth,
+  gutterWidth,
   span,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
   activeDate: Temporal.PlainDate
   dayWidth: number
+  gutterWidth: number
   span: Span
 }): {
   origin: Temporal.PlainDate
@@ -123,7 +123,7 @@ export function useInfiniteDays({
     const update = () => {
       frame = 0
       const first = Math.floor(el.scrollLeft / dayWidth)
-      const last = Math.ceil((el.scrollLeft + el.clientWidth - GUTTER_WIDTH) / dayWidth)
+      const last = Math.ceil((el.scrollLeft + el.clientWidth - gutterWidth) / dayWidth)
       setStrip((current) => {
         const start =
           first - EDGE_DAYS < current.start ? Math.max(0, first - BUFFER_DAYS) : current.start
@@ -145,7 +145,7 @@ export function useInfiniteDays({
       el.removeEventListener("scroll", onScroll)
       cancelAnimationFrame(frame)
     }
-  }, [scrollContainerRef, dayWidth])
+  }, [scrollContainerRef, dayWidth, gutterWidth])
 
   const { origin, start, end } = strip
   const days = useMemo(
@@ -171,6 +171,7 @@ const DAY_WIDTH_MIN = 100
 export function useDayWidth(
   scrollContainerRef: RefObject<HTMLDivElement | null>,
   span: Span,
+  gutterWidth: number,
 ): {
   dayWidth: number
   measured: boolean
@@ -182,14 +183,14 @@ export function useDayWidth(
     const el = scrollContainerRef.current
     if (!el) return
     const update = () => {
-      setDayWidth(Math.max(DAY_WIDTH_MIN, (el.clientWidth - GUTTER_WIDTH) / VISIBLE_DAYS[span]))
+      setDayWidth(Math.max(DAY_WIDTH_MIN, (el.clientWidth - gutterWidth) / VISIBLE_DAYS[span]))
       setMeasured(true)
     }
     update()
     const ro = new ResizeObserver(update)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [scrollContainerRef, span])
+  }, [scrollContainerRef, span, gutterWidth])
 
   return { dayWidth, measured }
 }

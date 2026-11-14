@@ -27,6 +27,7 @@ export function GeneralPage() {
       <TimeFormatSection />
       <FirstDayOfWeekSection />
       <WeekNumbersSection />
+      <TimeZonesSection />
       <DataDirectorySection />
       <AutoSyncSection />
       <hr />
@@ -90,6 +91,17 @@ const WeekNumbersSection = () => {
     </div>
   )
 }
+
+// Time zones are added and changed on the time grid itself, so this only points there.
+const TimeZonesSection = () => (
+  <div className="flex flex-col gap-2">
+    <label className="text-sm">Time zones</label>
+    <p className="text-xs text-muted-foreground">
+      Add time zones with the + above the hours in day and week view. Click a zone&apos;s name to
+      change or remove it.
+    </p>
+  </div>
+)
 
 const AutoSyncSection = () => {
   const { autoSyncEnabled, setAutoSyncEnabled } = useSettings()

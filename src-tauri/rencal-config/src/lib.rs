@@ -104,6 +104,9 @@ pub enum FirstDayOfWeek {
     Sunday,
 }
 
+/// How many timezones the time grid shows besides the local one.
+pub const MAX_EXTRA_TIME_ZONES: usize = 2;
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
     #[serde(default = "default_notifications_enabled")]
@@ -117,6 +120,11 @@ pub struct RencalConfig {
 
     #[serde(default)]
     pub show_week_numbers: bool,
+
+    /// IANA timezones shown next to the local one in the day and week views,
+    /// at most `MAX_EXTRA_TIME_ZONES`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extra_time_zones: Vec<String>,
 
     /// Tables must come AFTER top-level configs since they add a header:
     #[serde(default, deserialize_with = "deserialize_theme")]
@@ -133,6 +141,7 @@ impl Default for RencalConfig {
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
             show_week_numbers: false,
+            extra_time_zones: Vec::new(),
             theme: ThemeConfig::default(),
             groups: BTreeMap::new(),
         }
@@ -276,6 +285,23 @@ mod tests {
         assert!(toml_str.contains("show_week_numbers = true"));
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
         assert!(reparsed.show_week_numbers);
+    }
+
+    #[test]
+    fn extra_time_zones_default_to_none_and_round_trip_before_tables() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert!(config.extra_time_zones.is_empty());
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(!toml_str.contains("extra_time_zones"));
+
+        let config = RencalConfig {
+            extra_time_zones: vec!["America/Los_Angeles".into(), "Europe/London".into()],
+            ..Default::default()
+        };
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.find("extra_time_zones").unwrap() < toml_str.find("[theme]").unwrap());
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert_eq!(reparsed.extra_time_zones, config.extra_time_zones);
     }
 
     #[test]
