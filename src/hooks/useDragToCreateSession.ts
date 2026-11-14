@@ -4,7 +4,12 @@ import { suppressNextClick } from "@/contexts/EventDragContext"
 
 import { scrollParent } from "@/lib/day-grid"
 import { createDebugLogger } from "@/lib/debug"
-import { DRAG_THRESHOLD_PX, edgeScrollDelta } from "@/lib/event-drag"
+import {
+  DRAG_THRESHOLD_PX,
+  edgeScrollDelta,
+  startDragScroll,
+  type DragScroll,
+} from "@/lib/event-drag"
 
 const debugCreateDrag = createDebugLogger("drag-to-create")
 
@@ -35,6 +40,7 @@ type CreateDragSession<TAnchor, TSelection> = {
   cancelled: boolean
   selection: TSelection | null
   raf: number | null
+  dragScroll: DragScroll
 }
 
 export function useDragToCreateSession<TAnchor, TSelection>(
@@ -76,10 +82,7 @@ export function useDragToCreateSession<TAnchor, TSelection>(
           el.getBoundingClientRect(),
           session.lastX,
           session.lastY,
-          {
-            x: el.scrollWidth > el.clientWidth,
-            y: el.scrollHeight > el.clientHeight,
-          },
+          session.dragScroll.autoscrollAxes(),
         )
         if (dx || dy) {
           el.scrollBy(dx, dy)
@@ -110,6 +113,7 @@ export function useDragToCreateSession<TAnchor, TSelection>(
       const session = sessionRef.current
       if (!session) return
       if (session.raf !== null) cancelAnimationFrame(session.raf)
+      session.dragScroll.release()
       sessionRef.current = null
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
@@ -162,10 +166,11 @@ export function useDragToCreateSession<TAnchor, TSelection>(
 
     const start = (anchor: TAnchor, originEl: HTMLElement, press: Press) => {
       if (press.button !== 0 || sessionRef.current) return
+      const scrollEl = scrollParent(originEl)
       sessionRef.current = {
         anchor,
         originEl,
-        scrollEl: scrollParent(originEl),
+        scrollEl,
         startX: press.clientX,
         startY: press.clientY,
         lastX: press.clientX,
@@ -174,6 +179,7 @@ export function useDragToCreateSession<TAnchor, TSelection>(
         cancelled: false,
         selection: null,
         raf: null,
+        dragScroll: startDragScroll(scrollEl),
       }
       window.addEventListener("pointermove", onPointerMove)
       window.addEventListener("pointerup", onPointerUp)

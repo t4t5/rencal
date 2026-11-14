@@ -106,6 +106,51 @@ export function isDragPreview(event: CalendarEvent): boolean {
   return event.id.endsWith(DRAG_PREVIEW_SUFFIX)
 }
 
+type Axes = { x: boolean; y: boolean }
+
+const overflowingAxes = (el: HTMLElement): Axes => ({
+  x: el.scrollWidth > el.clientWidth,
+  y: el.scrollHeight > el.clientHeight,
+})
+
+export type DragScroll = {
+  /** Axes autoscroll may move this frame: overflowing and not `overflow: hidden`. */
+  autoscrollAxes: () => Axes
+  /** Drops the press listener, in case its mousedown never came. */
+  release: () => void
+}
+
+/**
+ * Sets up scrolling for a drag starting in `scrollEl`. Drags leave `overflow: hidden`
+ * axes alone, like the day view's x. WebKit's own drag autoscroll ignores them, and
+ * only cancelling the press's mousedown stops it.
+ */
+export function startDragScroll(scrollEl: HTMLElement | null): DragScroll {
+  if (!scrollEl) return { autoscrollAxes: () => ({ x: false, y: false }), release: () => {} }
+
+  const { overflowX, overflowY } = getComputedStyle(scrollEl)
+  const hidden = { x: overflowX === "hidden", y: overflowY === "hidden" }
+  const autoscrollAxes = () => {
+    const overflowing = overflowingAxes(scrollEl)
+    return { x: overflowing.x && !hidden.x, y: overflowing.y && !hidden.y }
+  }
+
+  const overflowing = overflowingAxes(scrollEl)
+  if (!(overflowing.x && hidden.x) && !(overflowing.y && hidden.y)) {
+    return { autoscrollAxes, release: () => {} }
+  }
+  const cancel = (e: MouseEvent) => {
+    e.preventDefault()
+    // The cancelled press no longer moves focus off whatever had it.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+  }
+  window.addEventListener("mousedown", cancel, { capture: true, once: true })
+  return {
+    autoscrollAxes,
+    release: () => window.removeEventListener("mousedown", cancel, { capture: true }),
+  }
+}
+
 /**
  * How far a scroll container should scroll this frame given the pointer's
  * position: nothing while the pointer is away from its edges, ramping up to a
