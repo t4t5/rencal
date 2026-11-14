@@ -471,12 +471,12 @@ pub fn rpc_time_to_core(w: &RpcEventTime) -> TauResult<EventTime> {
         RpcEventTime::DatetimeZoned { wallclock, tzid } => {
             let datetime = parse_naive_datetime(wallclock)?;
             // Validate the tzid is a known IANA zone, but store the original string.
-            tzid.parse::<chrono_tz::Tz>().map_err(|e| {
-                RpcError::new(
+            if caldir_core::Tz::get(tzid).is_none() {
+                return Err(RpcError::new(
                     RpcErrorKind::InvalidInput,
-                    format!("Unknown IANA timezone '{}': {}", tzid, e),
-                )
-            })?;
+                    format!("Unknown IANA timezone '{}'", tzid),
+                ));
+            }
             Ok(EventTime::DateTimeZoned {
                 datetime,
                 tzid: tzid.clone(),
