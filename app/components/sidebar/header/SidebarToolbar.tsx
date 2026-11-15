@@ -17,7 +17,9 @@ export function SidebarToolbar() {
   return (
     <View
       class="flex-row items-center justify-end gap-3"
-      style={{ paddingLeft: isWideWindow() ? 0 : titleBar().left }}
+      // Clears the macOS traffic lights; the "+" sits at the right end, so this only
+      // shows once it grows into the input.
+      style={{ paddingLeft: titleBar().left }}
     >
       <ComposeEventButton />
       <If when={!isWideWindow()}>
