@@ -136,6 +136,11 @@ export function ComposeEventInput(props: { onExit: () => void }) {
         readonly={!isDrafting()}
         // Desktop Tab treats every enabled input as a stop, whatever `focusable` says.
         disabled={!isDrafting()}
+        // `disabled` doesn't stop GTK handing focus here (the window's first field).
+        caret={isDrafting()}
+        onFocus={() => {
+          if (!isDrafting()) input?.blur()
+        }}
         variant="default"
         placeholder={isDrafting() ? "Meeting at 3pm" : ""}
         value={shownText()}
