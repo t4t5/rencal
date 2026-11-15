@@ -40,7 +40,9 @@ export function EventPopup(props: {
       onPressOutside={() => !annotating() && props.onDismiss("pressOutside")}
       onCancel={() => !annotating() && props.onDismiss("cancel")}
     >
-      <Scroll class="min-h-0 shrink">{props.children}</Scroll>
+      <Scroll class="min-h-0 shrink" scrollbar={false}>
+        {props.children}
+      </Scroll>
     </Overlay>
   )
 }
