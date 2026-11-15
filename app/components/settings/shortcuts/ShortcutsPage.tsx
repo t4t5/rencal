@@ -1,6 +1,10 @@
 import { cleanup, computed, type JSX, signal, Text, token, View } from "nsh"
 
-import { SettingsContent } from "@/components/settings/SettingsContent"
+import {
+  SettingsContent,
+  SettingsRow,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
 import { formatHotkeyKey, ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -75,7 +79,7 @@ export function ShortcutsPage() {
   }
 
   return (
-    <SettingsContent contentClass="max-w-[640px]">
+    <SettingsContent>
       <View class="flex-row items-center">
         <View class="absolute left-3">
           <SearchIcon class="size-4" color={token("muted-foreground")} />
@@ -103,8 +107,7 @@ export function ShortcutsPage() {
           const groupRows = () => filteredRows().filter((row) => row.group === group())
           return (
             <If when={groupRows().length > 0}>
-              <View>
-                <Text class="pb-1 text-sm font-semibold text-foreground">{group()}</Text>
+              <SettingsSection title={group()}>
                 <Each of={groupRows()} key={(row) => row.action}>
                   {(row) => (
                     <ShortcutRow
@@ -124,7 +127,7 @@ export function ShortcutsPage() {
                     />
                   )}
                 </Each>
-              </View>
+              </SettingsSection>
             </If>
           )
         }}
@@ -151,10 +154,8 @@ function ShortcutRow(props: {
   onReset: () => void
 }) {
   return (
-    <View class="min-h-11 flex-row items-center justify-between gap-4 border-b border-border py-1.5">
-      <Text class="text-sm">{props.label}</Text>
-
-      <View class="shrink-0 flex-row flex-wrap items-center justify-end gap-1.5">
+    <SettingsRow label={props.label}>
+      <View class="flex-row flex-wrap items-center justify-end gap-1.5">
         <Each of={props.keys}>
           {(key) => (
             <View class="flex-row items-center gap-0.5 rounded-(--radius-md) bg-hover py-0.5 pl-1 pr-0.5">
@@ -189,7 +190,7 @@ function ShortcutRow(props: {
           </RowButton>
         </If>
       </View>
-    </View>
+    </SettingsRow>
   )
 }
 

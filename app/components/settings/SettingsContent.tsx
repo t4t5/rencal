@@ -17,8 +17,13 @@ export function SettingsContent(props: {
   )
 }
 
-/** A titled card of `SettingsRow`s, as a system settings pane groups them. */
-export function SettingsSection(props: { title: string; class?: string; children?: JSX.Element }) {
+/** A titled card of `SettingsRow`s, as a system settings pane groups them, with a note under it. */
+export function SettingsSection(props: {
+  title: string
+  footer?: string
+  class?: string
+  children?: JSX.Element
+}) {
   return (
     <View class={cn("gap-2", props.class)}>
       <Text class={cn("px-1 font-mono text-sm", displayCase(), displayWeight())}>
@@ -28,6 +33,18 @@ export function SettingsSection(props: { title: string; class?: string; children
         {/* Every row draws the line above it; this tucks the first row's under the card's edge. */}
         <View class="-mt-px">{props.children}</View>
       </View>
+      <If when={props.footer}>
+        <Text class="px-1 text-xs text-muted-foreground">{props.footer}</Text>
+      </If>
+    </View>
+  )
+}
+
+/** A row of a `SettingsSection` laid out by the caller: the card's inset and the line above it. */
+export function SettingsItem(props: { class?: string; children?: JSX.Element }) {
+  return (
+    <View class={cn("mx-4 flex-row items-center gap-3 border-t border-border py-2", props.class)}>
+      {props.children}
     </View>
   )
 }
@@ -43,7 +60,7 @@ export function SettingsRow(props: {
   children?: JSX.Element
 }) {
   return (
-    <View class="mx-4 flex-row items-start gap-4 border-t border-border py-2">
+    <SettingsItem class="items-start gap-4">
       <View class="min-h-(--control-height) min-w-0 flex-1 justify-center gap-0.5">
         <Text class="text-sm">{props.label}</Text>
         <If when={props.description}>
@@ -54,7 +71,7 @@ export function SettingsRow(props: {
       <View class="min-h-(--control-height) shrink-0 flex-row items-center gap-2">
         {props.children}
       </View>
-    </View>
+    </SettingsItem>
   )
 }
 

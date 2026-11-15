@@ -1,14 +1,17 @@
 import { computed, effect, signal, Text, View } from "nsh"
 import { Button as BaseButton } from "nsh/base"
 
-import { SettingsContent, SettingsField } from "@/components/settings/SettingsContent"
-import { Select } from "@/components/ui/select"
+import {
+  SettingsContent,
+  SettingsRow,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
+import { Segmented } from "@/components/ui/segmented"
 
 import type { ThemeMode } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
 import { themeColors, type Vars } from "@/themes"
-import { displayCase } from "@/themes"
 import {
   externalThemeErrors,
   onOmarchy,
@@ -24,14 +27,14 @@ import { type ThemeSlot, themesFor } from "@/themes/theme-settings"
 
 import { PreviewWindow } from "./PreviewWindow"
 
-const MODES = [
+const MODES: { value: ThemeMode; title: string }[] = [
   { value: "single", title: "Single theme" },
   { value: "system", title: "Sync with system" },
 ]
 
 const SLOTS: { value: Appearance; title: string }[] = [
-  { value: "dark", title: "Dark theme" },
-  { value: "light", title: "Light theme" },
+  { value: "dark", title: "Dark mode" },
+  { value: "light", title: "Light mode" },
 ]
 
 export function ThemesPage() {
@@ -46,54 +49,38 @@ export function ThemesPage() {
 
   return (
     <SettingsContent>
-      <SettingsField label="Theme mode" class="w-[180px]">
-        <Select
-          variant="default"
-          items={MODES}
-          value={themeSettings().mode}
-          onChange={(mode) => setThemeMode(mode as ThemeMode)}
-        />
-      </SettingsField>
-      <If
-        when={syncsWithSystem() && onOmarchy()}
-        else={
-          <View class="gap-3">
-            <If when={syncsWithSystem()}>
-              <View class="h-[34px] flex-row items-center self-start">
-                <Each of={SLOTS} key={(item) => item.value}>
-                  {(item) => (
-                    <BaseButton
-                      onPress={() => pairSlot.set(item().value)}
-                      class={cn(
-                        "h-(--control-height) items-center justify-center rounded-(--radius-circle) px-3",
-                        item().value === pairSlot() && "bg-secondary",
-                      )}
-                    >
-                      <Text
-                        class={cn(
-                          "font-mono text-sm font-medium",
-                          displayCase(),
-                          item().value === pairSlot()
-                            ? "text-secondary-foreground"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        {item().title}
-                      </Text>
-                    </BaseButton>
-                  )}
-                </Each>
-              </View>
-            </If>
+      <SettingsSection title="Appearance">
+        <SettingsRow
+          label="Theme mode"
+          description={
+            syncsWithSystem() && onOmarchy() ? "renCal follows your Omarchy theme." : undefined
+          }
+        >
+          <Segmented
+            items={MODES}
+            value={themeSettings().mode}
+            onChange={(mode) => setThemeMode(mode)}
+          />
+        </SettingsRow>
+        <If when={syncsWithSystem() && !onOmarchy()}>
+          <SettingsRow
+            label="Choosing for"
+            description="The theme to use in each system appearance."
+          >
+            <Segmented items={SLOTS} value={pairSlot()} onChange={(next) => pairSlot.set(next)} />
+          </SettingsRow>
+        </If>
+      </SettingsSection>
+      <If when={!(syncsWithSystem() && onOmarchy())}>
+        <SettingsSection title="Themes">
+          <View class="p-4">
             <ThemeGrid
               themes={slotThemes()}
               selected={themeSettings()[slot()]}
               onSelect={(id) => setThemeSlot(slot(), id)}
             />
           </View>
-        }
-      >
-        <Text class="text-sm text-muted-foreground">renCal follows your Omarchy theme.</Text>
+        </SettingsSection>
       </If>
       <If when={externalThemeErrors().length > 0}>
         <View class="gap-1">

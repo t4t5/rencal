@@ -1,7 +1,12 @@
 import { effect, signal, Text, token, View } from "nsh"
 
 import { MoreMenu } from "@/components/settings/MoreMenu"
-import { ErrorText, SettingsContent } from "@/components/settings/SettingsContent"
+import {
+  ErrorText,
+  SettingsContent,
+  SettingsItem,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -72,12 +77,16 @@ export function AccountsPage() {
   }
 
   return (
-    <SettingsContent contentClass="w-[400px]">
-      <If
-        when={accounts().length > 0}
-        else={<Text class="text-sm text-muted-foreground">No accounts connected yet.</Text>}
-      >
-        <View class="gap-4">
+    <SettingsContent>
+      <SettingsSection title="Accounts">
+        <If
+          when={accounts().length > 0}
+          else={
+            <SettingsItem class="py-3">
+              <Text class="text-sm text-muted-foreground">No accounts connected yet.</Text>
+            </SettingsItem>
+          }
+        >
           <Each of={accounts()} key={(row) => row.key}>
             {(row) => (
               <Account
@@ -89,8 +98,8 @@ export function AccountsPage() {
               />
             )}
           </Each>
-        </View>
-      </If>
+        </If>
+      </SettingsSection>
 
       <ErrorText message={reconnectError()} />
 
@@ -158,13 +167,13 @@ function Account(props: {
   })
 
   return (
-    <View class="flex-row items-center gap-3">
-      <View class="size-11 shrink-0 items-center justify-center rounded-(--radius-lg) bg-secondary">
+    <SettingsItem>
+      <View class="size-9 shrink-0 items-center justify-center rounded-(--radius-md) bg-secondary">
         <ProviderIcon
           slug={props.provider}
           info={props.info}
           fallback={CalendarIcon}
-          class="size-6"
+          class="size-5"
         />
       </View>
 
@@ -199,7 +208,7 @@ function Account(props: {
           />
         )}
       </If>
-    </View>
+    </SettingsItem>
   )
 }
 

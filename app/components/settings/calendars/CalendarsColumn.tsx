@@ -2,7 +2,12 @@ import { signal, Text, View } from "nsh"
 
 import { pickIcsFile } from "@/components/ics-import/ics-import"
 import { MoreMenu } from "@/components/settings/MoreMenu"
-import { ErrorText, SettingsContent } from "@/components/settings/SettingsContent"
+import {
+  ErrorText,
+  SettingsContent,
+  SettingsItem,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
 import { loadProviders, providers } from "@/components/settings/accounts/providers"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -86,31 +91,32 @@ export function CalendarsColumn(props: { selectedGroup: string }) {
     setGroups(toggledGroups(groups(), props.selectedGroup, allSlugs(), slug, enabled))
 
   return (
-    <SettingsContent contentClass="py-5">
+    <SettingsContent>
       <If
         when={calendars().length > 0}
-        else={<Text class="text-sm text-muted-foreground">No calendars yet.</Text>}
+        else={
+          <SettingsSection title="Calendars">
+            <SettingsItem class="py-3">
+              <Text class="text-sm text-muted-foreground">No calendars yet.</Text>
+            </SettingsItem>
+          </SettingsSection>
+        }
       >
-        <View class="gap-4">
-          <Each of={sectionsOf(calendars())} key={(section) => section.title}>
-            {(section) => (
-              <View class="gap-2">
-                <Text class="text-sm text-muted-foreground">{section().title}</Text>
-                <View class="gap-1">
-                  <Each of={section().calendars} key={(calendar) => calendar.slug}>
-                    {(calendar) => (
-                      <CalendarRow
-                        calendar={calendar()}
-                        checked={selectedSlugs().includes(calendar().slug)}
-                        onCheckedChange={(enabled) => void setEnabled(calendar().slug, enabled)}
-                      />
-                    )}
-                  </Each>
-                </View>
-              </View>
-            )}
-          </Each>
-        </View>
+        <Each of={sectionsOf(calendars())} key={(section) => section.title}>
+          {(section) => (
+            <SettingsSection title={section().title}>
+              <Each of={section().calendars} key={(calendar) => calendar.slug}>
+                {(calendar) => (
+                  <CalendarRow
+                    calendar={calendar()}
+                    checked={selectedSlugs().includes(calendar().slug)}
+                    onCheckedChange={(enabled) => void setEnabled(calendar().slug, enabled)}
+                  />
+                )}
+              </Each>
+            </SettingsSection>
+          )}
+        </Each>
       </If>
 
       <View class="flex-row flex-wrap gap-2">
@@ -169,7 +175,7 @@ function CalendarRow(props: {
   }
 
   return (
-    <View class="flex-row items-center gap-3">
+    <SettingsItem>
       <Checkbox
         class="min-w-0 flex-1"
         checked={props.checked}
@@ -215,7 +221,7 @@ function CalendarRow(props: {
       <If when={showDelete()}>
         <DeleteCalendarDialog calendar={props.calendar} onClose={() => showDelete.set(false)} />
       </If>
-    </View>
+    </SettingsItem>
   )
 }
 

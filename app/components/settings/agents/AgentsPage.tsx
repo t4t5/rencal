@@ -1,8 +1,13 @@
 import { effect, lifecycle, openUrl, signal, Text, View } from "nsh"
 import { Button as BaseButton } from "nsh/base"
 
-import { ErrorText, SettingsContent } from "@/components/settings/SettingsContent"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  ErrorText,
+  SettingsContent,
+  SettingsRow,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
+import { Switch } from "@/components/ui/switch"
 
 import { api, getErrorMessage, type Skill, type SkillsStatus } from "@/lib/api"
 import { logger } from "@/lib/logger"
@@ -62,28 +67,29 @@ export function AgentsPage() {
           }
         >
           <SettingsContent>
-            <Text class="w-[400px] text-sm">
-              Tick a skill to install it for your coding agents.
-            </Text>
-            <If when={current().skills.every((state) => state.agents.length === 0)}>
-              <Text class="w-[400px] text-sm">
-                No supported coding agent was found in your home folder.
-              </Text>
-            </If>
-            <Each of={SKILLS} key={(item) => item.skill}>
-              {(item) => (
-                <If when={current().skills.find((state) => state.skill === item().skill)}>
-                  {(state) => (
-                    <SkillRow
-                      state={state()}
-                      label={item().label}
-                      description={item().description}
-                      onChange={(next) => status.set(next)}
-                    />
-                  )}
-                </If>
-              )}
-            </Each>
+            <SettingsSection
+              title="Skills"
+              footer={
+                current().skills.every((state) => state.agents.length === 0)
+                  ? "No supported coding agent was found in your home folder."
+                  : "Turn a skill on to install it for your coding agents."
+              }
+            >
+              <Each of={SKILLS} key={(item) => item.skill}>
+                {(item) => (
+                  <If when={current().skills.find((state) => state.skill === item().skill)}>
+                    {(state) => (
+                      <SkillRow
+                        state={state()}
+                        label={item().label}
+                        description={item().description}
+                        onChange={(next) => status.set(next)}
+                      />
+                    )}
+                  </If>
+                )}
+              </Each>
+            </SettingsSection>
           </SettingsContent>
         </If>
       )}
@@ -124,31 +130,36 @@ function SkillRow(props: {
   }
 
   return (
-    <View class="w-[400px] gap-1">
-      <Checkbox
+    <SettingsRow
+      label={props.label}
+      description={props.description}
+      detail={
+        <>
+          <If when={!props.state.available}>
+            <View class="flex-row gap-1">
+              <Text class="text-xs text-muted-foreground">Needs the caldir CLI.</Text>
+              <BaseButton onPress={() => void openUrl(CALDIR_INSTALL_URL)}>
+                <Text class="text-xs text-primary hover:underline">Install it</Text>
+              </BaseButton>
+            </View>
+          </If>
+          <If when={installed() && missing().length > 0}>
+            <BaseButton class="self-start" disabled={busy()} onPress={() => void run(true)}>
+              <Text class="text-xs text-primary hover:underline">
+                Add to {joinNames(missing())}
+              </Text>
+            </BaseButton>
+          </If>
+          <ErrorText message={error()} class="text-xs" />
+        </>
+      }
+    >
+      <Switch
+        accessibilityLabel={props.label}
         checked={installed()}
         disabled={busy() || !props.state.available || props.state.agents.length === 0}
         onChange={(checked) => void run(checked)}
-      >
-        <Text class="text-sm">{props.label}</Text>
-      </Checkbox>
-      <View class="gap-1 pl-6">
-        <Text class="text-xs text-muted-foreground">{props.description}</Text>
-        <If when={!props.state.available}>
-          <View class="flex-row gap-1">
-            <Text class="text-xs text-muted-foreground">Needs the caldir CLI.</Text>
-            <BaseButton onPress={() => void openUrl(CALDIR_INSTALL_URL)}>
-              <Text class="text-xs text-primary hover:underline">Install it</Text>
-            </BaseButton>
-          </View>
-        </If>
-        <If when={installed() && missing().length > 0}>
-          <BaseButton class="self-start" disabled={busy()} onPress={() => void run(true)}>
-            <Text class="text-xs text-primary hover:underline">Add to {joinNames(missing())}</Text>
-          </BaseButton>
-        </If>
-        <ErrorText message={error()} class="text-xs" />
-      </View>
-    </View>
+      />
+    </SettingsRow>
   )
 }

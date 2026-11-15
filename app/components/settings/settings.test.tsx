@@ -62,6 +62,8 @@ test("settings: closing a dialog in Settings leaves Settings open", async () => 
 test("themes: picking one switches the app live", async () => {
   const app = await openSettings()
   await app.press("text:Themes")
+  // A new config syncs with the system, which would put Nord in the slot not showing.
+  await app.press("text:SINGLE THEME")
   await app.waitFor("label:Nord")
 
   await app.press("label:Nord")
@@ -75,17 +77,16 @@ test("themes: syncing follows the system's appearance, off Omarchy", async () =>
   const app = await openSettings()
   await app.press("text:Themes")
   await app.waitFor("text:Theme mode")
-  await app.waitFor("text:Single theme")
-  await app.press("text:Single theme")
-  await app.waitFor("text:Sync with system")
-  await app.press("text:Sync with system")
-  await app.waitUntil(() => app.count("text:Sync with system") === 1)
+  await app.press("text:SINGLE THEME")
+  await app.waitFor("label:Nord")
+  await app.press("text:SYNC WITH SYSTEM")
 
   // Omarchy's palette replaces the pair on a desktop that has it.
+  await app.waitUntil(
+    () => app.shows("text:Choosing for") || app.shows("text:renCal follows your Omarchy theme."),
+  )
   if (app.shows("text:renCal follows your Omarchy theme.")) {
-    await app.press("text:Sync with system")
-    await app.waitFor("text:Single theme")
-    await app.press("text:Single theme")
+    await app.press("text:SINGLE THEME")
     await app.waitFor("label:Nord")
     return
   }
@@ -95,8 +96,6 @@ test("themes: syncing follows the system's appearance, off Omarchy", async () =>
   await app.setColorScheme("dark")
   await app.waitUntil(() => app.spanStyle("text:Theme mode").color === "#ffffffff")
 
-  await app.press("text:Sync with system")
-  await app.waitFor("text:Single theme")
-  await app.press("text:Single theme")
+  await app.press("text:SINGLE THEME")
   await app.waitFor("label:Nord")
 })
