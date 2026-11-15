@@ -1,7 +1,11 @@
 import { computed, effect, cleanup, signal, Text, View } from "nsh"
 import { Button as BaseButton } from "nsh/base"
 
-import { ErrorText, SettingsContent } from "@/components/settings/SettingsContent"
+import {
+  ErrorText,
+  SettingsContent,
+  settingsFrameless,
+} from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -97,7 +101,13 @@ export function PluginsPage() {
 
   return (
     <View class="min-w-0 flex-1">
-      <View class="shrink-0 gap-3 border-b border-border p-4 pt-7">
+      <View
+        class={cn(
+          "shrink-0 gap-3 border-b border-border p-4",
+          // Clear of the close button.
+          settingsFrameless && "pt-7",
+        )}
+      >
         <View class="flex-row items-center gap-2">
           <Input
             variant="default"

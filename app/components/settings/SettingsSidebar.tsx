@@ -43,45 +43,51 @@ export const NAV_ITEMS: NavItem[] = [
   { tab: "agents", label: "Agents", icon: AgentIcon, page: AgentsPage },
 ]
 
-export function SettingsSidebar() {
+/** `topInset` is the title bar's height, kept clear (and draggable) above the items. */
+export function SettingsSidebar(props: { topInset: number }) {
   return (
-    <View class="w-[200px] shrink-0 gap-1 border-r border-border bg-sidebar p-1 py-(--layout-padding)">
-      <Each of={NAV_ITEMS} key={(item) => item.tab}>
-        {(item) => {
-          const active = () => settingsTab() === item().tab
-          const updates = () => (item().tab === "plugins" ? pluginUpdateCount() : 0)
-          return (
-            <BaseButton
-              onPress={() => setSettingsTab(item().tab)}
-              class={cn(
-                "flex-row items-center gap-2 rounded-(--radius-md) px-2 py-2 hover:bg-hover",
-                active() && "bg-secondary",
-              )}
-            >
-              {item().icon({
-                class: "size-4",
-                color: token(active() ? "secondary-foreground" : "muted-foreground"),
-              })}
-              <Text
+    <View class="w-[200px] shrink-0 border-r border-border bg-sidebar">
+      <If when={props.topInset > 0}>
+        <View class="shrink-0" style={{ height: props.topInset }} desktop={{ windowDrag: true }} />
+      </If>
+      <View class="min-h-0 flex-1 gap-1 p-1 py-(--layout-padding)">
+        <Each of={NAV_ITEMS} key={(item) => item.tab}>
+          {(item) => {
+            const active = () => settingsTab() === item().tab
+            const updates = () => (item().tab === "plugins" ? pluginUpdateCount() : 0)
+            return (
+              <BaseButton
+                onPress={() => setSettingsTab(item().tab)}
                 class={cn(
-                  "flex-1 text-sm",
-                  active() ? "text-secondary-foreground" : "text-muted-foreground",
+                  "flex-row items-center gap-2 rounded-(--radius-md) px-2 py-2 hover:bg-hover",
+                  active() && "bg-secondary",
                 )}
               >
-                {item().label}
-              </Text>
-              <If when={updates() > 0}>
-                <View
-                  accessibilityLabel={`${updates()} plugin ${updates() === 1 ? "update" : "updates"} available`}
-                  class="h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1"
+                {item().icon({
+                  class: "size-4",
+                  color: token(active() ? "secondary-foreground" : "muted-foreground"),
+                })}
+                <Text
+                  class={cn(
+                    "flex-1 text-sm",
+                    active() ? "text-secondary-foreground" : "text-muted-foreground",
+                  )}
                 >
-                  <Text class="text-xs font-medium text-brand-foreground">{updates()}</Text>
-                </View>
-              </If>
-            </BaseButton>
-          )
-        }}
-      </Each>
+                  {item().label}
+                </Text>
+                <If when={updates() > 0}>
+                  <View
+                    accessibilityLabel={`${updates()} plugin ${updates() === 1 ? "update" : "updates"} available`}
+                    class="h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1"
+                  >
+                    <Text class="text-xs font-medium text-brand-foreground">{updates()}</Text>
+                  </View>
+                </If>
+              </BaseButton>
+            )
+          }}
+        </Each>
+      </View>
     </View>
   )
 }

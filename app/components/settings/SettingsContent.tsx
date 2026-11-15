@@ -1,8 +1,15 @@
-import { type JSX, Scroll, Text, View } from "nsh"
+import { platform, type JSX, Scroll, Text, View } from "nsh"
 
+import { needsNativeDecorations } from "@/lib/api/internal"
 import { cn } from "@/lib/utils"
 
 import { displayCase, displayWeight } from "@/themes"
+
+/**
+ * Settings draws its own close button in the top right: tiling compositors draw no title
+ * bar, but GTK gives a dialog one of its own.
+ */
+export const settingsFrameless = platform.os === "linux" && !needsNativeDecorations()
 
 /** A page's scrolling column. */
 export function SettingsContent(props: {
