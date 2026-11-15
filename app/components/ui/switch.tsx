@@ -18,8 +18,8 @@ export function Switch(props: {
       accessibilityLabel={props.accessibilityLabel}
       onChange={({ checked }) => props.onChange?.(checked)}
       class={cn("flex-row items-center gap-2 disabled:opacity-50", props.class)}
-      trackClass="h-5 w-9 justify-center rounded-(--radius-circle) bg-input px-0.5 transition-colors duration-150 checked:bg-primary"
-      thumbClass="size-4 rounded-(--radius-circle) bg-foreground transition-transform duration-150 checked:translate-x-4 checked:bg-primary-foreground"
+      trackClass="h-6 w-10 justify-center rounded-(--radius-circle) bg-input px-0.5 transition-colors duration-150 checked:bg-primary"
+      thumbClass="size-5 rounded-(--radius-circle) bg-foreground transition-transform duration-150 checked:translate-x-4 checked:bg-primary-foreground"
     >
       {props.children}
     </BaseSwitch>

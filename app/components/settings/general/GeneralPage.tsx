@@ -1,11 +1,15 @@
-import { signal, Text, View } from "nsh"
+import { signal } from "nsh"
 import { Backend } from "rencal/native"
 
-import { ErrorText, SettingsContent, SettingsField } from "@/components/settings/SettingsContent"
+import {
+  ErrorText,
+  SettingsContent,
+  SettingsRow,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
+import { Segmented } from "@/components/ui/segmented"
+import { Switch } from "@/components/ui/switch"
 
 import { getErrorMessage } from "@/lib/api"
 import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
@@ -31,12 +35,12 @@ import {
   updatePhase,
 } from "@/stores/update"
 
-const TIME_FORMATS = [
+const TIME_FORMATS: { value: TimeFormat; title: string }[] = [
   { value: "24h", title: "24h" },
   { value: "12h", title: "12h" },
 ]
 
-const FIRST_DAYS = [
+const FIRST_DAYS: { value: FirstDayOfWeek; title: string }[] = [
   { value: "monday", title: "Monday" },
   { value: "sunday", title: "Sunday" },
 ]
@@ -44,61 +48,69 @@ const FIRST_DAYS = [
 export function GeneralPage() {
   return (
     <SettingsContent>
-      <SettingsField label="Time format" class="w-[150px]">
-        <Select
-          variant="default"
-          items={TIME_FORMATS}
-          value={timeFormat()}
-          onChange={(value) => void setTimeFormat(value as TimeFormat)}
-        />
-      </SettingsField>
-      <SettingsField label="Start week on" class="w-[150px]">
-        <Select
-          variant="default"
-          items={FIRST_DAYS}
-          value={firstDayOfWeek()}
-          onChange={(value) => void setFirstDayOfWeek(value as FirstDayOfWeek)}
-        />
-      </SettingsField>
-      <Checkbox checked={showWeekNumbers()} onChange={(show) => void setShowWeekNumbers(show)}>
-        <Text class="text-sm">Show week numbers</Text>
-      </Checkbox>
-      {/* Time zones are added and changed on the time grid itself, so this only points there. */}
-      <SettingsField label="Time zones" class="w-[400px]">
-        <Text class="text-xs text-muted-foreground">
-          Add time zones with the + above the hours in day and week view. Click a zone's name to
-          change or remove it.
-        </Text>
-      </SettingsField>
-      <DataDirectorySection />
-      <View class="w-[400px] gap-1">
-        <Checkbox checked={autoSyncEnabled()} onChange={(on) => void setAutoSyncEnabled(on)}>
-          <Text class="text-sm">Automatic sync</Text>
-        </Checkbox>
-        <Text class="pl-6 text-xs text-muted-foreground">
-          Uncheck if you prefer to manually push/pull changes.
-        </Text>
-      </View>
-      <View class="h-px bg-border" />
-      <SettingsField label="About" class="w-[400px]">
-        <Text class="text-xs text-muted-foreground">renCal v{appInfo.version}</Text>
-        <If when={availableUpdate()}>
-          <Button
-            variant="link"
-            size="xs"
-            class="self-start px-0"
-            label={updateActionLabel(`Update to v${availableUpdate()?.version}`)}
-            disabled={updatePhase() !== "idle"}
-            onPress={() => void installUpdate()}
+      <SettingsSection title="Calendar">
+        <SettingsRow label="Time format">
+          <Segmented
+            items={TIME_FORMATS}
+            value={timeFormat()}
+            onChange={(value) => void setTimeFormat(value)}
           />
-          <ErrorText message={updateError()} />
-        </If>
-      </SettingsField>
+        </SettingsRow>
+        <SettingsRow label="Start week on">
+          <Segmented
+            items={FIRST_DAYS}
+            value={firstDayOfWeek()}
+            onChange={(value) => void setFirstDayOfWeek(value)}
+          />
+        </SettingsRow>
+        <SettingsRow label="Show week numbers">
+          <Switch
+            accessibilityLabel="Show week numbers"
+            checked={showWeekNumbers()}
+            onChange={(show) => void setShowWeekNumbers(show)}
+          />
+        </SettingsRow>
+        {/* Time zones are added and changed on the time grid itself, so this only points there. */}
+        <SettingsRow
+          label="Time zones"
+          description="Add time zones with the + above the hours in day and week view. Click a zone's name to change or remove it."
+        />
+      </SettingsSection>
+      <SettingsSection title="Sync">
+        <SettingsRow
+          label="Automatic sync"
+          description="Turn off to push and pull changes yourself."
+        >
+          <Switch
+            accessibilityLabel="Automatic sync"
+            checked={autoSyncEnabled()}
+            onChange={(on) => void setAutoSyncEnabled(on)}
+          />
+        </SettingsRow>
+        <DataDirectoryRow />
+      </SettingsSection>
+      <SettingsSection title="About">
+        <SettingsRow
+          label="renCal"
+          description={`Version ${appInfo.version}`}
+          detail={<ErrorText class="text-xs" message={updateError()} />}
+        >
+          <If when={availableUpdate()}>
+            <Button
+              variant="secondary"
+              size="sm"
+              label={updateActionLabel(`Update to v${availableUpdate()?.version}`)}
+              disabled={updatePhase() !== "idle"}
+              onPress={() => void installUpdate()}
+            />
+          </If>
+        </SettingsRow>
+      </SettingsSection>
     </SettingsContent>
   )
 }
 
-function DataDirectorySection() {
+function DataDirectoryRow() {
   const error = signal<string | null>(null)
 
   const change = async () => {
@@ -112,12 +124,12 @@ function DataDirectorySection() {
   }
 
   return (
-    <SettingsField label="Data directory" class="w-[400px]">
-      <View class="flex-row gap-2">
-        <Input variant="default" class="flex-1" value={calendarDir()} readonly />
-        <Button variant="secondary" label="Change" onPress={() => void change()} />
-      </View>
-      <ErrorText message={error()} />
-    </SettingsField>
+    <SettingsRow
+      label="Data directory"
+      description={calendarDir()}
+      detail={<ErrorText class="text-xs" message={error()} />}
+    >
+      <Button variant="secondary" size="sm" label="Change" onPress={() => void change()} />
+    </SettingsRow>
   )
 }

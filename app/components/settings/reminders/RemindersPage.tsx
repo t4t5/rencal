@@ -1,8 +1,12 @@
-import { Text } from "nsh"
+import { View } from "nsh"
 
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
-import { SettingsContent, SettingsField } from "@/components/settings/SettingsContent"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  SettingsContent,
+  SettingsRow,
+  SettingsSection,
+} from "@/components/settings/SettingsContent"
+import { Switch } from "@/components/ui/switch"
 
 import {
   defaultReminders,
@@ -14,26 +18,30 @@ import {
 export function RemindersPage() {
   return (
     <SettingsContent>
-      <Checkbox
-        class="gap-3"
-        checked={notificationsEnabled()}
-        onChange={(enabled) => void setNotificationsEnabled(enabled)}
-      >
-        <Text class="text-sm">Enable notifications</Text>
-      </Checkbox>
-      <SettingsField label="Default reminders" class="w-[300px]">
-        <ReminderSelect
-          reminders={defaultReminders()}
-          onSelect={(minutes) => void setDefaultReminders([...defaultReminders(), minutes])}
-          onRemove={(minutes) =>
-            void setDefaultReminders(defaultReminders().filter((m) => m !== minutes))
-          }
-          placeholder="Add reminder"
-          variant="default"
-          indentRows={false}
-          addon={null}
-        />
-      </SettingsField>
+      <SettingsSection title="Notifications">
+        <SettingsRow label="Enable notifications">
+          <Switch
+            accessibilityLabel="Enable notifications"
+            checked={notificationsEnabled()}
+            onChange={(enabled) => void setNotificationsEnabled(enabled)}
+          />
+        </SettingsRow>
+        <SettingsRow label="Default reminders" description="Added to every new event.">
+          <View class="w-[240px]">
+            <ReminderSelect
+              reminders={defaultReminders()}
+              onSelect={(minutes) => void setDefaultReminders([...defaultReminders(), minutes])}
+              onRemove={(minutes) =>
+                void setDefaultReminders(defaultReminders().filter((m) => m !== minutes))
+              }
+              placeholder="Add reminder"
+              variant="default"
+              indentRows={false}
+              addon={null}
+            />
+          </View>
+        </SettingsRow>
+      </SettingsSection>
     </SettingsContent>
   )
 }
