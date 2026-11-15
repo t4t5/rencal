@@ -1,6 +1,7 @@
 import { type JSX, Text, token, View } from "nsh"
 import { titleBar } from "nsh/desktop"
 
+import { SearchButton } from "@/components/search/SearchButton"
 import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { formatHotkeyKey } from "@/components/shortcuts/ShortcutKeys"
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
@@ -12,16 +13,9 @@ import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { inspectable } from "@/lib/inspect"
 
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  PlusIcon,
-  SearchIcon,
-  SettingsIcon,
-  SidebarIcon,
-} from "@/icons"
+import { CheckIcon, ChevronDownIcon, PlusIcon, SettingsIcon, SidebarIcon } from "@/icons"
 import { activeGroup, navigateToDate, setActiveGroup } from "@/stores/calendar"
-import { actionKeys, composeNewEvent, setSearchOpen } from "@/stores/commands"
+import { actionKeys, composeNewEvent } from "@/stores/commands"
 import { groups } from "@/stores/settings"
 import {
   calendarView,
@@ -163,17 +157,7 @@ export function MainHeader() {
       <View class="flex-1" />
       <GroupSwitcher />
       <CalendarViewDropdown />
-      <View tooltip={<CommandTooltip text="Search" action="search.open" />}>
-        <Button
-          variant="secondary"
-          class="w-[260px] justify-start px-2"
-          onPress={() => setSearchOpen(true)}
-        >
-          <SearchIcon />
-          <Text class="text-sm text-muted-foreground flex-1">Search</Text>
-          <Text class="font-mono text-xs text-muted-foreground">/</Text>
-        </Button>
-      </View>
+      <SearchButton />
     </View>
   )
 }

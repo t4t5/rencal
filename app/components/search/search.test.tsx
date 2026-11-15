@@ -39,3 +39,10 @@ test("a query with no match says so", async () => {
   await app.type("id:search-events", "zzzzqq")
   await app.waitFor("No events found.")
 })
+
+test("the header's search button opens the palette", async () => {
+  const app = await open("../../App.tsx", desktop)
+  await app.waitFor("id:agenda")
+  await app.press("label:Search")
+  await app.waitFor("id:search-events")
+})

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { SearchIcon } from "@/icons"
 import { setSearchOpen } from "@/stores/commands"
 
-/** The narrow window's search, in the sidebar's toolbar. */
+/** Opens the search palette, from the main header or the narrow window's sidebar toolbar. */
 export function SearchButton() {
   return (
     <View tooltip={<CommandTooltip text="Search" action="search.open" />}>
