@@ -41,7 +41,7 @@ export function EventColorPicker(props: {
     <Menu
       placement="bottom"
       align="end"
-      popupClass="w-[232px] flex-row flex-wrap gap-1 p-2"
+      popupClass="p-2"
       trigger={
         <Button variant="ghost" size="icon">
           <View
@@ -51,21 +51,24 @@ export function EventColorPicker(props: {
         </Button>
       }
     >
-      <Each of={options()} key={(option) => option.name}>
-        {(option) => (
-          <View tooltip={<Tooltip label={option().name} />}>
-            <MenuItem
-              class="size-8 items-center justify-center p-0"
-              onSelect={() => props.onChange(option().hex)}
-            >
-              <Swatch
-                color={option().swatch}
-                selected={option().hex === (selected()?.hex ?? null)}
-              />
-            </MenuItem>
-          </View>
-        )}
-      </Each>
+      {/* The menu stacks its children in a scroll column, so the swatches wrap in one row view. */}
+      <View class="w-[212px] flex-row flex-wrap gap-1">
+        <Each of={options()} key={(option) => option.name}>
+          {(option) => (
+            <View tooltip={<Tooltip label={option().name} />}>
+              <MenuItem
+                class="size-8 items-center justify-center p-0"
+                onSelect={() => props.onChange(option().hex)}
+              >
+                <Swatch
+                  color={option().swatch}
+                  selected={option().hex === (selected()?.hex ?? null)}
+                />
+              </MenuItem>
+            </View>
+          )}
+        </Each>
+      </View>
     </Menu>
   )
 }
