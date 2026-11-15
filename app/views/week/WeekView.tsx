@@ -75,6 +75,8 @@ const BAR_TITLE_ROOM = 48
 /** Lanes are padded by these to match the gap between them. */
 const LANES_TOP = 1
 const LANES_BOTTOM = 2
+/** How long the day view slides to a nearby day. */
+const DAY_SLIDE_MS = 300
 
 const HOURS = Array.from({ length: 23 }, (_, i) => i + 1)
 
@@ -198,7 +200,12 @@ function CurrentTimeIndicator(props: { inset: boolean }) {
   )
 }
 
-function DayColumn(props: { index: () => number; dayWidth: () => number; span: Span }) {
+function DayColumn(props: {
+  index: () => number
+  left: () => number
+  dayWidth: () => number
+  span: Span
+}) {
   const date = computed(() => dateOf(props.index()))
   const blocks = (): TimedBlock<TimedItem>[] => weekEvents().blocks.get(epochDay(date())) ?? []
   // A timed selection can run across days: each column draws its own part.
@@ -217,7 +224,7 @@ function DayColumn(props: { index: () => number; dayWidth: () => number; span: S
       }}
       class={cn("absolute top-0 border-r border-border", FOCUS_RING, dayClass(date(), props.span))}
       style={{
-        left: props.index() * props.dayWidth(),
+        left: props.left(),
         width: props.dayWidth(),
         height: GRID_HEIGHT,
       }}
@@ -356,6 +363,7 @@ function timeGridView(span: Span): JSX.Element {
     hasAllDay() ? allDay().laneCount * LANE_HEIGHT + LANES_TOP + LANES_BOTTOM : 0
   const headerHeight = () => DAY_HEADER_HEIGHT + lanesHeight()
   const leftOf = (index: number) => (index - base) * dayWidth()
+  const stripShift = () => stripX.mul(-1).add(base * dayWidth())
 
   const viewportWidth = () => untracked(width) - untracked(gutterWidth)
 
@@ -372,6 +380,19 @@ function timeGridView(span: Span): JSX.Element {
   }
   const viewportHeight = () => untracked(height) - untracked(headerHeight)
 
+  const columns = (left: (index: number) => number) => (
+    <Each of={track.slots()}>
+      {(slot) => (
+        <DayColumn
+          index={() => track.indexOf(slot())}
+          left={() => left(track.indexOf(slot()))}
+          dayWidth={dayWidth}
+          span={span}
+        />
+      )}
+    </Each>
+  )
+
   const reportVisible = () => {
     const w = untracked(dayWidth)
     const first = Math.floor(offsetX / w)
@@ -381,8 +402,17 @@ function timeGridView(span: Span): JSX.Element {
     track.show(offsetX, viewportWidth(), w)
   }
 
-  const scrollToDay = (index: number, animated: boolean) =>
-    days?.scrollTo({ x: index * untracked(dayWidth), animated })
+  const scrollToDay = (index: number, animated: boolean) => {
+    const x = index * untracked(dayWidth)
+    if (span === "week") {
+      days?.scrollTo({ x, animated })
+      return
+    }
+    offsetX = x
+    reportVisible()
+    if (animated) void stripX.timing(x, { duration: DAY_SLIDE_MS })
+    else stripX.set(x)
+  }
 
   // A column fully on screen stays where it is; anything else brings its week (or,
   // in a day view, itself) to the left edge, without animating past more than a few screens.
@@ -520,7 +550,7 @@ function timeGridView(span: Span): JSX.Element {
           <View class="flex-1 min-w-0 overflow-hidden relative border-b border-border">
             <View
               class="absolute top-0 bottom-0 left-0 w-0"
-              style={{ translate: [stripX.mul(-1).add(base * dayWidth()), 0] }}
+              style={{ translate: [stripShift(), 0] }}
             >
               <Each of={track.slots()}>
                 {(slot) => (
@@ -566,32 +596,36 @@ function timeGridView(span: Span): JSX.Element {
         >
           <View class="flex-row" style={{ height: GRID_HEIGHT }}>
             <TimeGutter zones={zones} />
-            <Scroll
-              ref={days}
-              horizontal
-              scrollValue={stripX}
-              scrollbar={false}
-              bounces={false}
-              scrollable={span === "week"}
-              onScroll={(event) => {
-                offsetX = event.offset.x
-                reportVisible()
-              }}
-              onLayout={openStrip}
-              class="flex-1"
-            >
-              <View style={{ width: TRACK_DAYS * dayWidth(), height: GRID_HEIGHT }}>
-                <Each of={track.slots()}>
-                  {(slot) => (
-                    <DayColumn
-                      index={() => track.indexOf(slot())}
-                      dayWidth={dayWidth}
-                      span={span}
-                    />
-                  )}
-                </Each>
+            {span === "week" ? (
+              <Scroll
+                ref={days}
+                horizontal
+                scrollValue={stripX}
+                scrollbar={false}
+                bounces={false}
+                onScroll={(event) => {
+                  offsetX = event.offset.x
+                  reportVisible()
+                }}
+                onLayout={openStrip}
+                class="flex-1"
+              >
+                <View style={{ width: TRACK_DAYS * dayWidth(), height: GRID_HEIGHT }}>
+                  {columns((index) => index * dayWidth())}
+                </View>
+              </Scroll>
+            ) : (
+              // A day has no scroll view to swipe: `scrollable={false}` still let a
+              // touchpad move one on Linux. `scrollToDay` moves the strip, as the header.
+              <View class="flex-1 overflow-hidden" onLayout={openStrip}>
+                <View
+                  class="absolute top-0 left-0 w-0"
+                  style={{ height: GRID_HEIGHT, translate: [stripShift(), 0] }}
+                >
+                  {columns(leftOf)}
+                </View>
               </View>
-            </Scroll>
+            )}
           </View>
         </Scroll>
       </If>
