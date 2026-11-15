@@ -4151,7 +4151,3 @@ dependencies = [
  "log",
  "simd-adler32",
 ]
-
-[[patch.unused]]
-name = "nsh-core"
-version = "0.5.0"

@@ -50,7 +50,8 @@ test("settings: opening it again brings the open window forward", async () => {
 test("settings: closing a dialog in Settings leaves Settings open", async () => {
   const app = await openSettings()
   await app.press("text:Calendars")
-  await app.press("text:NEW CALENDAR")
+  await app.press("text:ADD CALENDAR")
+  await app.press("text:New calendar")
   await app.waitFor("text:CREATE CALENDAR")
 
   await app.press("label:Close")

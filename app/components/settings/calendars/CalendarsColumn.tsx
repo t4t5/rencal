@@ -1,4 +1,4 @@
-import { signal, Text, View } from "nsh"
+import { signal, Text, token, View } from "nsh"
 
 import { pickIcsFile } from "@/components/ics-import/ics-import"
 import { MoreMenu } from "@/components/settings/MoreMenu"
@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { MenuItem } from "@/components/ui/menu"
+import { Menu, MenuItem } from "@/components/ui/menu"
 
 import { api, type Calendar, getErrorMessage } from "@/lib/api"
 import { eventPaint } from "@/lib/event-paint"
@@ -26,7 +26,7 @@ import { findProvider, getProviderDisplayName } from "@/lib/providers"
 import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
 
-import { PlusIcon, RssIcon } from "@/icons"
+import { CalendarIcon, ChevronDownIcon, PlusIcon, RssIcon } from "@/icons"
 import { calendars, reloadCalendars } from "@/stores/calendar"
 import { defaultCalendar, groups, setDefaultCalendar, setGroups } from "@/stores/settings"
 import { displayCase } from "@/themes"
@@ -119,29 +119,33 @@ export function CalendarsColumn(props: { selectedGroup: string }) {
         </Each>
       </If>
 
-      <View class="flex-row flex-wrap gap-2">
-        <Button variant="secondary" onPress={() => showNewCalendar.set(true)}>
+      <Menu
+        align="start"
+        trigger={
+          <View class="h-(--control-height) shrink-0 flex-row items-center gap-2 self-start rounded-(--radius-md) border border-button-border bg-secondary px-3 hover:bg-secondary-hover">
+            <PlusIcon class="size-4" />
+            <Text
+              class={cn("font-mono text-sm font-medium text-secondary-foreground", displayCase())}
+            >
+              Add calendar
+            </Text>
+            <ChevronDownIcon class="size-4" color={token("muted-foreground")} />
+          </View>
+        }
+      >
+        <MenuItem onSelect={() => showNewCalendar.set(true)}>
           <PlusIcon class="size-4" />
-          <Text
-            class={cn("font-mono text-sm font-medium text-secondary-foreground", displayCase())}
-          >
-            New calendar
-          </Text>
-        </Button>
-        <Button variant="secondary" onPress={() => showAddSubscription.set(true)}>
+          <Text class="text-sm">New calendar</Text>
+        </MenuItem>
+        <MenuItem onSelect={() => showAddSubscription.set(true)}>
           <RssIcon class="size-4" />
-          <Text
-            class={cn("font-mono text-sm font-medium text-secondary-foreground", displayCase())}
-          >
-            Add subscription
-          </Text>
-        </Button>
-        <Button
-          variant="secondary"
-          label="Import .ics file"
-          onPress={() => void pickIcsFile().catch(importFailed)}
-        />
-      </View>
+          <Text class="text-sm">Add subscription</Text>
+        </MenuItem>
+        <MenuItem onSelect={() => void pickIcsFile().catch(importFailed)}>
+          <CalendarIcon class="size-4" />
+          <Text class="text-sm">Import .ics file</Text>
+        </MenuItem>
+      </Menu>
 
       <If when={showNewCalendar()}>
         <NewCalendarModal onClose={() => showNewCalendar.set(false)} />
