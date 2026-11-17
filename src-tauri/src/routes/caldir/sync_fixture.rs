@@ -20,7 +20,9 @@ pub struct SyncFixture {
 
 impl SyncFixture {
     /// One calendar per `(slug, provider)`. Provider `ok` serves one event,
-    /// `broken` fails every request, and any other slug isn't installed.
+    /// `broken` fails every request, `overlap` serves its event only to
+    /// requests that run alongside another one, and any other slug isn't
+    /// installed.
     pub fn new(calendars: &[(&str, &str)]) -> Self {
         let tmp = TempDir::new().unwrap();
         let bin = tmp.path().join("bin");
@@ -32,6 +34,7 @@ impl SyncFixture {
         stub_provider(&bin, "ok", &ok.to_string());
         let broken = serde_json::json!({ "status": "error", "error": BROKEN_MESSAGE });
         stub_provider(&bin, "broken", &broken.to_string());
+        overlap_provider(&bin, &tmp.path().join("in-flight"));
 
         let config_path = tmp.path().join("config.toml");
         let data_dir = tmp.path().join("data");
@@ -65,14 +68,38 @@ impl SyncFixture {
 fn stub_provider(dir: &Path, slug: &str, response: &str) {
     let response_path = dir.join(format!("{slug}.json"));
     std::fs::write(&response_path, response).unwrap();
+    write_provider(dir, slug, &format!("cat '{}'\n", response_path.display()));
+}
+
+/// A provider binary that answers like `ok` once a second request to it has
+/// started, and like `broken` if it is still alone after three seconds. Each
+/// request leaves a marker in `in_flight`, so calendars synced one after
+/// another fail and calendars synced together succeed.
+fn overlap_provider(dir: &Path, in_flight: &Path) {
+    std::fs::create_dir_all(in_flight).unwrap();
+    let script = format!(
+        r#"touch '{in_flight}'/$$
+tries=0
+while [ "$(ls '{in_flight}' | wc -l)" -lt 2 ]; do
+  tries=$((tries + 1))
+  if [ "$tries" -gt 300 ]; then
+    cat '{broken}'
+    exit 0
+  fi
+  sleep 0.01
+done
+cat '{ok}'
+"#,
+        in_flight = in_flight.display(),
+        broken = dir.join("broken.json").display(),
+        ok = dir.join("ok.json").display(),
+    );
+    write_provider(dir, "overlap", &script);
+}
+
+/// An executable `caldir-provider-{slug}` that drains the request, then runs `body`.
+fn write_provider(dir: &Path, slug: &str, body: &str) {
     let binary = dir.join(format!("caldir-provider-{slug}"));
-    std::fs::write(
-        &binary,
-        format!(
-            "#!/bin/sh\ncat > /dev/null\ncat '{}'\n",
-            response_path.display()
-        ),
-    )
-    .unwrap();
+    std::fs::write(&binary, format!("#!/bin/sh\ncat > /dev/null\n{body}")).unwrap();
     std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755)).unwrap();
 }
