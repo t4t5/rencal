@@ -1,5 +1,6 @@
 use super::conference::apply_conference;
 use super::event_color::{apply_color_id, color_id};
+use super::helpers::update_recurring_instance;
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
@@ -40,7 +41,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
             ));
         }
 
-        calendar.update_recurring_instance(&id, |event| {
+        update_recurring_instance(&calendar, &id, |event| {
             event.summary = Some(input.summary);
             event.description = input.description;
             event.location = input.location;
