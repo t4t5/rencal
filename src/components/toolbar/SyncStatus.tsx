@@ -8,7 +8,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
-import type { SyncPreview } from "@/lib/api"
+import type { SyncFailure, SyncPreview } from "@/lib/api"
 
 import { CloudIcon } from "@/icons/cloud"
 import { CloudCheckIcon } from "@/icons/cloud-check"
@@ -17,7 +17,7 @@ import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
 
 export const SyncStatus = () => {
-  const { syncStatus, syncError, pendingPreviews, syncNow } = useSync()
+  const { syncStatus, syncError, syncFailures, pendingPreviews, syncNow } = useSync()
 
   const isOnline = useIsOnline()
 
@@ -45,9 +45,14 @@ export const SyncStatus = () => {
     tooltipContent = <>Syncing...</>
   }
 
-  if (syncError) {
+  if (syncError || syncFailures.length > 0) {
     icon = <CloudWarningIcon className="size-4 text-warning pointer-events-none" />
-    tooltipContent = syncError
+    tooltipContent = (
+      <div className="flex flex-col gap-2">
+        <SyncFailures syncError={syncError} syncFailures={syncFailures} />
+        {!!pendingCount && <ChangesPreview pendingPreviews={pendingPreviews} />}
+      </div>
+    )
   }
 
   if (!isOnline) {
@@ -95,9 +100,36 @@ const DiffCounterBadge = ({ count }: { count: number }) => {
   )
 }
 
-const ChangesPreview = ({ pendingPreviews }: { pendingPreviews: SyncPreview[] }) => {
+const useCalendarName = () => {
   const { calendars } = useCalendars()
-  const calendarName = (slug: string) => calendars.find((c) => c.slug === slug)?.name ?? slug
+  return (slug: string) => calendars.find((c) => c.slug === slug)?.name ?? slug
+}
+
+const SyncFailures = ({
+  syncError,
+  syncFailures,
+}: {
+  syncError: string | null
+  syncFailures: SyncFailure[]
+}) => {
+  const calendarName = useCalendarName()
+
+  return (
+    <div className="flex flex-col gap-1">
+      {syncError && <div>{syncError}</div>}
+
+      {syncFailures.map((f, i) => (
+        <div key={`${f.calendar_slug}-${i}`}>
+          {f.calendar_slug === null ? "Unknown calendar" : calendarName(f.calendar_slug)}:{" "}
+          {f.error.message}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const ChangesPreview = ({ pendingPreviews }: { pendingPreviews: SyncPreview[] }) => {
+  const calendarName = useCalendarName()
 
   const { autoSyncEnabled } = useSettings()
   if (autoSyncEnabled) return null

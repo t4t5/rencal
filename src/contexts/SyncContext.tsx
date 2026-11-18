@@ -5,7 +5,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { getErrorMessage, api, type SyncPreview } from "@/lib/api"
+import { getErrorMessage, api, type SyncFailure, type SyncPreview } from "@/lib/api"
 import { createStrictContext } from "@/lib/strict-context"
 
 const MASS_DELETE_THRESHOLD = 10
@@ -16,7 +16,10 @@ interface SyncContextType {
   requestSync: () => Promise<void>
   syncNow: () => Promise<void>
   syncStatus: SyncStatus
+  /** The whole sync call failed. */
   syncError: string | null
+  /** Calendars that failed on their own while the rest synced. */
+  syncFailures: SyncFailure[]
   pendingPreviews: SyncPreview[]
   pendingMassDelete: SyncPreview[] | null
   confirmMassDelete: () => Promise<void>
@@ -35,6 +38,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle")
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [syncFailures, setSyncFailures] = useState<SyncFailure[]>([])
   const [pendingPreviews, setPendingPreviews] = useState<SyncPreview[]>([])
   const [pendingMassDelete, setPendingMassDelete] = useState<SyncPreview[] | null>(null)
   // Re-entrancy lock, not a mirror of `syncStatus`: it can outlive a run
@@ -57,12 +61,14 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       // so the UI never shows just "checking" when the preview turns out empty.
       setSyncStatus(manual ? "syncing" : "checking")
       setSyncError(null)
+      setSyncFailures([])
       try {
-        const previews = await api.sync.preview()
+        const { previews, failures } = await api.sync.preview()
         const withWork = previews.filter((p) => p.to_push_count > 0 || p.to_pull_count > 0)
         setPendingPreviews(withWork)
 
         if (!apply) {
+          setSyncFailures(failures)
           syncLockRef.current = false
           setSyncStatus("idle")
           return
@@ -72,8 +78,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
         if (withWork.length > 0) {
           setSyncStatus("syncing")
-          await api.sync.run([])
+          // `run` re-diffs every calendar, so its failures supersede the preview's.
+          setSyncFailures(await api.sync.run([]))
           await reloadEvents()
+        } else {
+          setSyncFailures(failures)
         }
 
         if (tripped.length > 0) {
@@ -107,9 +116,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setPendingMassDelete(null)
     setSyncStatus("syncing")
     setSyncError(null)
+    setSyncFailures([])
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await api.sync.run(slugs)
+      setSyncFailures(await api.sync.run(slugs))
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(getErrorMessage(e, "Failed to sync calendars"))
@@ -126,9 +136,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setPendingMassDelete(null)
     setSyncStatus("syncing")
     setSyncError(null)
+    setSyncFailures([])
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await api.sync.discardPendingChanges()
+      setSyncFailures(await api.sync.discardPendingChanges())
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(getErrorMessage(e, "Failed to sync calendars"))
@@ -165,6 +176,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       syncNow,
       syncStatus,
       syncError,
+      syncFailures,
       pendingPreviews,
       pendingMassDelete,
       confirmMassDelete,
@@ -176,6 +188,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       syncNow,
       syncStatus,
       syncError,
+      syncFailures,
       pendingPreviews,
       pendingMassDelete,
       confirmMassDelete,

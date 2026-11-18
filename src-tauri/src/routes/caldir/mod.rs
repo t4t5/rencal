@@ -32,13 +32,16 @@ mod set_calendar_color;
 mod set_config;
 mod split_recurring_series_at;
 mod sync;
+#[cfg(all(test, unix))]
+mod sync_fixture;
 mod sync_preview;
 mod update_event;
 
 pub use types::{
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
     CredentialsConnectResult, IcsImportResult, IcsImportTarget, IcsPreview, ProviderConnectInfo,
-    ResponseStatus, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    ResponseStatus, SplitRecurringSeriesInput, SyncFailure, SyncPreviewResult, TimeFormat,
+    UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -83,11 +86,11 @@ pub trait CaldirApi {
         response: ResponseStatus,
     ) -> TauResult<()>;
 
-    async fn sync_preview() -> TauResult<Vec<SyncPreview>>;
+    async fn sync_preview() -> TauResult<SyncPreviewResult>;
 
-    async fn sync(allow_mass_delete: Vec<String>) -> TauResult<()>;
+    async fn sync(allow_mass_delete: Vec<String>) -> TauResult<Vec<SyncFailure>>;
 
-    async fn discard() -> TauResult<()>;
+    async fn discard() -> TauResult<Vec<SyncFailure>>;
 
     async fn list_providers() -> TauResult<Vec<ProviderInfo>>;
 
@@ -228,15 +231,15 @@ impl CaldirApi for CaldirApiImpl {
         rsvp::handler(&self.state, calendar_slug, event_id, response)
     }
 
-    async fn sync_preview(self) -> TauResult<Vec<SyncPreview>> {
+    async fn sync_preview(self) -> TauResult<SyncPreviewResult> {
         sync_preview::handler(&self.state).await
     }
 
-    async fn sync(self, allow_mass_delete: Vec<String>) -> TauResult<()> {
+    async fn sync(self, allow_mass_delete: Vec<String>) -> TauResult<Vec<SyncFailure>> {
         sync::handler(&self.state, allow_mass_delete).await
     }
 
-    async fn discard(self) -> TauResult<()> {
+    async fn discard(self) -> TauResult<Vec<SyncFailure>> {
         discard::handler(&self.state).await
     }
 
