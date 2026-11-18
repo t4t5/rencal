@@ -77,6 +77,8 @@ const LANES_TOP = 1
 const LANES_BOTTOM = 2
 /** How long the day view slides to a nearby day. */
 const DAY_SLIDE_MS = 300
+/** How far, in days, a day view's strip may show from the day its columns are laid out around. */
+const SLIDE_REACH_DAYS = 3
 
 const HOURS = Array.from({ length: 23 }, (_, i) => i + 1)
 
@@ -340,8 +342,10 @@ function timeGridView(span: Span): JSX.Element {
   const showDays = holdVisibleDays(LOAD_BUFFER_DAYS, LOAD_EDGE_DAYS)
 
   const openedAt = untracked(() => firstVisibleIndex(activeDate(), span))
-  // The header's days sit relative to this one, and it follows the strip on the UI thread.
-  const base = openedAt
+  // Days are laid out around this one, and the strip is shifted to the day shown. A day
+  // view keeps it at that day: NSH drops views laid out over three viewports from their
+  // scroll view's, wherever a transform shows them.
+  const base = signal(openedAt)
   const stripX = createAnimatedValue(0)
   const track = trackWindow(() => TRACK_DAYS, OVERSCAN_DAYS)
 
@@ -362,8 +366,8 @@ function timeGridView(span: Span): JSX.Element {
   const lanesHeight = () =>
     hasAllDay() ? allDay().laneCount * LANE_HEIGHT + LANES_TOP + LANES_BOTTOM : 0
   const headerHeight = () => DAY_HEADER_HEIGHT + lanesHeight()
-  const leftOf = (index: number) => (index - base) * dayWidth()
-  const stripShift = () => stripX.mul(-1).add(base * dayWidth())
+  const leftOf = (index: number) => (index - base()) * dayWidth()
+  const stripShift = () => stripX.mul(-1).add(base() * dayWidth())
 
   const viewportWidth = () => untracked(width) - untracked(gutterWidth)
 
@@ -402,6 +406,10 @@ function timeGridView(span: Span): JSX.Element {
     track.show(offsetX, viewportWidth(), w)
   }
 
+  // The days a day view's strip may be showing, between the ends of its running slides.
+  let sliding = { from: openedAt, to: openedAt }
+  let slides = 0
+
   const scrollToDay = (index: number, animated: boolean) => {
     const x = index * untracked(dayWidth)
     if (span === "week") {
@@ -410,8 +418,19 @@ function timeGridView(span: Span): JSX.Element {
     }
     offsetX = x
     reportVisible()
-    if (animated) void stripX.timing(x, { duration: DAY_SLIDE_MS })
-    else stripX.set(x)
+    base.set(index)
+    const from = Math.min(sliding.from, index)
+    const to = Math.max(sliding.to, index)
+    const slide = ++slides
+    if (animated && to - from <= SLIDE_REACH_DAYS) {
+      sliding = { from, to }
+      void stripX.timing(x, { duration: DAY_SLIDE_MS }).then(() => {
+        if (slide === slides) sliding = { from: index, to: index }
+      })
+    } else {
+      sliding = { from: index, to: index }
+      stripX.set(x)
+    }
   }
 
   // A column fully on screen stays where it is; anything else brings its week (or,
