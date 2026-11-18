@@ -3,18 +3,25 @@ import { Tooltip as BaseTooltip } from "nsh/base"
 
 import { Button } from "@/components/ui/button"
 
-import type { SyncPreview } from "@/lib/api"
+import type { SyncFailure, SyncPreview } from "@/lib/api"
 
 import { CloudCheckIcon, CloudIcon, CloudOffIcon, CloudWarningIcon, SyncIcon } from "@/icons"
 import { calendarOf } from "@/stores/calendar"
 import { autoSyncEnabled } from "@/stores/settings"
-import { isOnline, pendingPreviews, syncError, syncNow, syncStatus } from "@/stores/sync"
+import {
+  isOnline,
+  pendingPreviews,
+  syncError,
+  syncFailures,
+  syncNow,
+  syncStatus,
+} from "@/stores/sync"
 
 type Shown = "offline" | "error" | "syncing" | "checking" | "pending" | "synced"
 
 const shown = (pending: number): Shown => {
   if (!isOnline()) return "offline"
-  if (syncError()) return "error"
+  if (syncError() || syncFailures().length > 0) return "error"
   if (syncStatus() === "syncing") return "syncing"
   if (syncStatus() === "checking") return "checking"
   return pending ? "pending" : "synced"
@@ -35,10 +42,25 @@ function ChangesPreview() {
       <Each of={pendingPreviews()} key={(preview) => preview.calendar_slug}>
         {(preview) => (
           <Text class="text-xs text-muted-foreground">
-            {calendarOf(preview().calendar_slug)?.name ?? preview().calendar_slug}:{" "}
-            {changesOf(preview())}
+            {calendarName(preview().calendar_slug)}: {changesOf(preview())}
           </Text>
         )}
+      </Each>
+    </View>
+  )
+}
+
+const calendarName = (slug: string) => calendarOf(slug)?.name ?? slug
+
+const failureText = (failure: SyncFailure) =>
+  `${failure.calendar_slug === null ? "Unknown calendar" : calendarName(failure.calendar_slug)}: ${failure.error.message}`
+
+function SyncFailures() {
+  return (
+    <View class="gap-1">
+      <If when={syncError() !== null}>{hintText(syncError())}</If>
+      <Each of={syncFailures()} key="index">
+        {(failure) => <Text class="text-xs text-tooltip-foreground">{failureText(failure())}</Text>}
       </Each>
     </View>
   )
@@ -72,11 +94,19 @@ export function SyncStatus() {
           <If when={state() === "pending" && !autoSyncEnabled()}>
             <ChangesPreview />
           </If>
-          <If when={state() !== "pending"}>
+          <If when={state() === "error"}>
+            <View class="gap-2">
+              <SyncFailures />
+              <If when={pendingCount() > 0 && !autoSyncEnabled()}>
+                <ChangesPreview />
+              </If>
+            </View>
+          </If>
+          <If when={state() !== "pending" && state() !== "error"}>
             {hintText(
               {
                 offline: "No internet connection",
-                error: syncError(),
+                error: null,
                 syncing: "Syncing...",
                 checking: "Checking for changes...",
                 synced: "Up-to-date",

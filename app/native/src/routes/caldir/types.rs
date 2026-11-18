@@ -369,6 +369,29 @@ pub struct SyncPreview {
     pub to_pull_count: u32,
 }
 
+/// One calendar that couldn't be synced. The others still sync.
+#[derive(Clone, Debug, Serialize, Type)]
+pub struct SyncFailure {
+    /// `None` when the calendar couldn't be loaded, so no slug is known.
+    pub calendar_slug: Option<String>,
+    pub error: RpcError,
+}
+
+impl SyncFailure {
+    pub fn new(calendar_slug: Option<&str>, error: impl Into<RpcError>) -> Self {
+        Self {
+            calendar_slug: calendar_slug.map(String::from),
+            error: error.into(),
+        }
+    }
+}
+
+#[derive(Serialize, Type)]
+pub struct SyncPreviewResult {
+    pub previews: Vec<SyncPreview>,
+    pub failures: Vec<SyncFailure>,
+}
+
 #[derive(Serialize, Type)]
 pub struct IcsPreview {
     pub file_name: String,

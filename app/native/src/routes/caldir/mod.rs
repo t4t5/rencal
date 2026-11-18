@@ -32,13 +32,16 @@ mod set_calendar_color;
 mod set_config;
 mod split_recurring_series_at;
 mod sync;
+#[cfg(all(test, unix))]
+mod sync_fixture;
 mod sync_preview;
 mod update_event;
 
 pub use types::{
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
     CredentialsConnectResult, IcsImportResult, IcsImportTarget, IcsPreview, ProviderConnectInfo,
-    ResponseStatus, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    ResponseStatus, SplitRecurringSeriesInput, SyncFailure, SyncPreviewResult, TimeFormat,
+    UpdateEventInput,
 };
 
 use crate::routes::RpcResult;
@@ -152,15 +155,15 @@ impl CaldirApiImpl {
         rsvp::handler(&self.state, calendar_slug, event_id, response)
     }
 
-    pub async fn sync_preview(self) -> RpcResult<Vec<SyncPreview>> {
+    pub async fn sync_preview(self) -> RpcResult<SyncPreviewResult> {
         sync_preview::handler(&self.state).await
     }
 
-    pub async fn sync(self, allow_mass_delete: Vec<String>) -> RpcResult<()> {
+    pub async fn sync(self, allow_mass_delete: Vec<String>) -> RpcResult<Vec<SyncFailure>> {
         sync::handler(&self.state, allow_mass_delete).await
     }
 
-    pub async fn discard(self) -> RpcResult<()> {
+    pub async fn discard(self) -> RpcResult<Vec<SyncFailure>> {
         discard::handler(&self.state).await
     }
 

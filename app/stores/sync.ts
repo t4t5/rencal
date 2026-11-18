@@ -6,7 +6,7 @@
 import { effect, lifecycle, signal, untracked } from "nsh"
 import { Backend } from "rencal/native"
 
-import { api, getErrorMessage, type SyncPreview } from "@/lib/api"
+import { api, getErrorMessage, type SyncFailure, type SyncPreview } from "@/lib/api"
 
 import { calendars } from "@/stores/calendar"
 import { reloadEvents } from "@/stores/events"
@@ -19,6 +19,7 @@ export type SyncState = "idle" | "checking" | "syncing"
 
 const status = signal<SyncState>("idle")
 const error = signal<string | null>(null)
+const failures = signal<SyncFailure[]>([])
 const previews = signal<SyncPreview[]>([])
 const massDelete = signal<SyncPreview[] | null>(null)
 const online = signal(true)
@@ -28,7 +29,10 @@ const online = signal(true)
 let locked = false
 
 export const syncStatus = () => status()
+/** The whole sync call failed. */
 export const syncError = () => error()
+/** Calendars that failed on their own while the rest synced. */
+export const syncFailures = () => failures()
 export const pendingPreviews = () => previews()
 export const pendingMassDelete = () => massDelete()
 export const isOnline = () => online()
@@ -42,12 +46,14 @@ async function runSync({ apply, manual = false }: { apply: boolean; manual?: boo
   // just "checking" when the preview turns out empty.
   status.set(manual ? "syncing" : "checking")
   error.set(null)
+  failures.set([])
   try {
-    const all = await api.sync.preview()
+    const { previews: all, failures: previewFailures } = await api.sync.preview()
     const withWork = all.filter((p) => p.to_push_count > 0 || p.to_pull_count > 0)
     previews.set(withWork)
 
     if (!apply) {
+      failures.set(previewFailures)
       locked = false
       status.set("idle")
       return
@@ -57,8 +63,11 @@ async function runSync({ apply, manual = false }: { apply: boolean; manual?: boo
 
     if (withWork.length > 0) {
       status.set("syncing")
-      await api.sync.run([])
+      // `run` re-diffs every calendar, so its failures supersede the preview's.
+      failures.set(await api.sync.run([]))
       await reloadEvents()
+    } else {
+      failures.set(previewFailures)
     }
 
     if (tripped.length > 0) {
@@ -82,16 +91,17 @@ export const requestSync = () => runSync({ apply: untracked(autoSyncEnabled) })
 /** Manual "sync now" (toolbar button, `s` shortcut). */
 export const syncNow = () => runSync({ apply: true, manual: true })
 
-async function settleMassDelete(settle: (slugs: string[]) => Promise<void>) {
+async function settleMassDelete(settle: (slugs: string[]) => Promise<SyncFailure[]>) {
   const tripped = massDelete()
   if (tripped === null) return
 
   massDelete.set(null)
   status.set("syncing")
   error.set(null)
+  failures.set([])
   try {
     const slugs = tripped.map((preview) => preview.calendar_slug)
-    await settle(slugs)
+    failures.set(await settle(slugs))
     previews.update((list) => list.filter((p) => !slugs.includes(p.calendar_slug)))
   } catch (e) {
     error.set(getErrorMessage(e, "Failed to sync calendars"))

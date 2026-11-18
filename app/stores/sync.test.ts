@@ -1,4 +1,4 @@
-import { api, type Calendar, type SyncPreview } from "@/lib/api"
+import { api, type Calendar, type SyncFailure, type SyncPreview } from "@/lib/api"
 import { afterEach, beforeEach, describe, expect, it } from "@/lib/testing/vitest"
 
 import { reloadCalendars } from "@/stores/calendar"
@@ -10,6 +10,7 @@ import {
   pendingPreviews,
   requestSync,
   syncError,
+  syncFailures,
   syncNow,
   syncStatus,
 } from "@/stores/sync"
@@ -23,8 +24,19 @@ const preview = (calendar_slug: string, counts: Partial<SyncPreview> = {}): Sync
     ...counts,
   }) as SyncPreview
 
-type Stubbed = { preview: () => Promise<SyncPreview[]>; run: (slugs: string[]) => Promise<void> }
-const sync = api.sync as unknown as Stubbed & { discardPendingChanges: () => Promise<void> }
+type PreviewResult = { previews: SyncPreview[]; failures: SyncFailure[] }
+type Stubbed = {
+  preview: () => Promise<PreviewResult>
+  run: (slugs: string[]) => Promise<SyncFailure[]>
+}
+const sync = api.sync as unknown as Stubbed & {
+  discardPendingChanges: () => Promise<SyncFailure[]>
+}
+
+const fastmailFailure: SyncFailure = {
+  calendar_slug: "fastmail",
+  error: { kind: "provider_failure", message: "malformed resource" },
+}
 const calendarsApi = api.calendars as unknown as { list: () => Promise<Calendar[]> }
 
 const setCalendars = (list: Partial<Calendar>[]) => {
@@ -36,6 +48,8 @@ describe("sync", () => {
   let ran: string[][] = []
   let discarded = 0
   let previews: SyncPreview[] = []
+  let previewFailures: SyncFailure[] = []
+  let runFailures: SyncFailure[] = []
   const real = { ...api.sync }
   const realCalendars = { ...api.calendars }
 
@@ -43,15 +57,17 @@ describe("sync", () => {
     ran = []
     discarded = 0
     previews = []
+    previewFailures = []
+    runFailures = []
     await setCalendars([{ slug: "work", provider: "google" }])
-    sync.preview = () => Promise.resolve(previews)
+    sync.preview = () => Promise.resolve({ previews, failures: previewFailures })
     sync.run = (slugs) => {
       ran.push(slugs)
-      return Promise.resolve()
+      return Promise.resolve(runFailures)
     }
     sync.discardPendingChanges = () => {
       discarded += 1
-      return Promise.resolve()
+      return Promise.resolve([])
     }
   })
 
@@ -111,7 +127,7 @@ describe("sync", () => {
     await syncNow()
     expect(syncError()).toBe("offline")
     expect(syncStatus()).toBe("idle")
-    sync.preview = () => Promise.resolve([])
+    sync.preview = () => Promise.resolve({ previews: [], failures: [] })
     await syncNow()
     expect(syncError()).toBeNull()
   })
@@ -120,5 +136,31 @@ describe("sync", () => {
     previews = [preview("work", { to_pull_count: 1 })]
     await requestSync()
     expect(syncStatus()).toBe("idle")
+  })
+
+  describe("a calendar failing to sync", () => {
+    it("does not stop the others from syncing", async () => {
+      previews = [preview("work", { to_pull_count: 1 })]
+      previewFailures = [fastmailFailure]
+      runFailures = [fastmailFailure]
+      await syncNow()
+      expect(ran).toEqual([[]])
+      expect(syncFailures()).toEqual([fastmailFailure])
+      expect(syncError()).toBeNull()
+    })
+
+    it("reports the run's failures over the preview's", async () => {
+      previews = [preview("work", { to_pull_count: 1 })]
+      previewFailures = [fastmailFailure]
+      await syncNow()
+      expect(syncFailures()).toEqual([])
+    })
+
+    it("reports the preview's failures when there is nothing to apply", async () => {
+      previewFailures = [fastmailFailure]
+      await syncNow()
+      expect(ran).toEqual([])
+      expect(syncFailures()).toEqual([fastmailFailure])
+    })
   })
 })

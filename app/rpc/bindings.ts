@@ -522,12 +522,25 @@ export type SplitRecurringSeriesInput = {
   new_recurrence: RpcRecurrence | null
 }
 
+/**
+ * One calendar that couldn't be synced. The others still sync.
+ */
+export type SyncFailure = {
+  /**
+   * `None` when the calendar couldn't be loaded, so no slug is known.
+   */
+  calendar_slug: string | null
+  error: RpcError
+}
+
 export type SyncPreview = {
   calendar_slug: string
   to_push_count: number
   to_push_delete_count: number
   to_pull_count: number
 }
+
+export type SyncPreviewResult = { previews: SyncPreview[]; failures: SyncFailure[] }
 
 /**
  * RPC mirror of `rencal_config::ThemeMode`.
@@ -587,7 +600,7 @@ export type Router = {
     delete_calendar: (calendarSlug: string) => Promise<null>
     delete_event: (calendarSlug: string, eventId: string) => Promise<null>
     delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>
-    discard: () => Promise<null>
+    discard: () => Promise<SyncFailure[]>
     find_event: (uid: string, recurrenceId: string | null) => Promise<CalendarEvent | null>
     get_caldir_settings: () => Promise<CaldirSettings>
     get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>
@@ -608,8 +621,8 @@ export type Router = {
     set_default_reminders: (minutes: number[]) => Promise<null>
     set_time_format: (timeFormat: TimeFormat) => Promise<null>
     split_recurring_series_at: (input: SplitRecurringSeriesInput) => Promise<CalendarEvent>
-    sync: (allowMassDelete: string[]) => Promise<null>
-    sync_preview: () => Promise<SyncPreview[]>
+    sync: (allowMassDelete: string[]) => Promise<SyncFailure[]>
+    sync_preview: () => Promise<SyncPreviewResult>
     update_event: (input: UpdateEventInput) => Promise<null>
   }
   commands: {

@@ -10,10 +10,10 @@ publish = false
 members = ["crates/notifierd", "crates/plugin-contract", "crates/reminder-core", "crates/rencal-config"]
 
 [workspace.dependencies]
-caldir-core = "0.17.6"
+caldir-core = "0.17.7"
 
 [workspace.metadata.caldir]
-provider-tag = "v0.14.11"
+provider-tag = "v0.14.12"
 
 [lib]
 name = "rencal_native"
