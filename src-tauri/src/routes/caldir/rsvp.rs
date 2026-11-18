@@ -1,4 +1,3 @@
-use super::helpers::update_recurring_instance;
 use super::types::ResponseStatus;
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
@@ -25,7 +24,7 @@ pub(super) fn handler(
     if instance_id.recurrence_id().is_some() {
         let mut result = Ok(());
 
-        update_recurring_instance(&calendar, &instance_id, |event| {
+        calendar.update_recurring_instance(&instance_id, |event| {
             result = event.set_attendee_status(&user_email, status);
         })?;
 
