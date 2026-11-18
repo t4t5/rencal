@@ -1,4 +1,4 @@
-use super::helpers::connection_with_slug;
+use super::helpers::for_each_connection;
 use super::types::SyncFailure;
 use crate::routes::TauResult;
 use crate::state::AppState;
@@ -7,35 +7,21 @@ use caldir_core::DateRange;
 /// A calendar that fails is returned as a failure; the rest still discard.
 pub(super) async fn handler(state: &AppState) -> TauResult<Vec<SyncFailure>> {
     let range = DateRange::default_sync_window();
-    let mut failures = Vec::new();
-    let connections = state.caldir().connections();
+    let range = &range;
 
-    for connection in connections {
-        let (mut connection, slug) = match connection_with_slug(connection) {
-            Ok(opened) => opened,
-            Err(error) => {
-                failures.push(SyncFailure::new(None, error));
-                continue;
-            }
-        };
+    let results = for_each_connection(state, |mut connection, slug| async move {
+        let failed = |error| SyncFailure::new(Some(&slug), error);
 
-        let diff = match connection.diff(&range).await {
-            Ok(diff) => diff,
-            Err(error) => {
-                failures.push(SyncFailure::new(Some(&slug), error));
-                continue;
-            }
-        };
+        let diff = connection.diff(range).await.map_err(failed)?;
 
         // A partial discard has already rewritten local files.
         let discarded = connection.discard_outgoing_diff(&diff);
         state.invalidate_events(&slug);
-        if let Err(error) = discarded {
-            failures.push(SyncFailure::new(Some(&slug), error));
-        }
-    }
+        discarded.map_err(failed)
+    })
+    .await;
 
-    Ok(failures)
+    Ok(results.into_iter().filter_map(Result::err).collect())
 }
 
 #[cfg(all(test, unix))]

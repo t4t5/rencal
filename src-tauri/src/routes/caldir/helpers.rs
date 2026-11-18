@@ -1,5 +1,5 @@
 use super::types::{
-    Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime,
+    Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime, SyncFailure,
     core_recurrence_to_rpc, rpc_time_to_core,
 };
 use crate::routes::TauResult;
@@ -9,6 +9,14 @@ use caldir_core::{
     CaldirError, CalendarConfig, Connection, DateRange, Event, Provider, ProviderSlug, Status,
 };
 use chrono::{DateTime, Utc};
+use futures_util::{StreamExt, stream};
+use std::future::Future;
+
+/// How many calendars talk to their provider at once. Most of a sync is spent
+/// waiting on the provider, so the calendars overlap; the cap keeps an account
+/// with many calendars from opening them all against one server at the same
+/// moment.
+const SYNC_CONCURRENCY: usize = 8;
 
 /// An owned handle to a provider binary (`Provider` is an `Arc` inside), so
 /// callers can talk to it without holding the caldir guard across the await.
@@ -21,8 +29,8 @@ pub fn provider(state: &AppState, provider_name: &str) -> TauResult<Provider> {
 }
 
 /// A connection from `Caldir::connections` with its slug. On failure the
-/// calendar can't be identified, so sync loops record it without a slug.
-pub fn connection_with_slug(
+/// calendar can't be identified, so it is recorded without a slug.
+fn connection_with_slug(
     connection: Result<Connection, CaldirError>,
 ) -> Result<(Connection, String), RpcError> {
     let connection = connection?;
@@ -32,6 +40,32 @@ pub fn connection_with_slug(
         .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar missing slug"))?
         .to_string();
     Ok((connection, slug))
+}
+
+/// Run `each` on every provider calendar, up to `SYNC_CONCURRENCY` at a time.
+/// Results come back in calendar order. A calendar that can't be opened is a
+/// failure without a slug, and `each` isn't called for it.
+pub async fn for_each_connection<T, F, Fut>(
+    state: &AppState,
+    each: F,
+) -> Vec<Result<T, SyncFailure>>
+where
+    F: Fn(Connection, String) -> Fut,
+    Fut: Future<Output = Result<T, SyncFailure>>,
+{
+    // Owned snapshot: the caldir guard must not live across the awaits below.
+    let connections = state.caldir().connections();
+    let each = &each;
+
+    stream::iter(connections)
+        .map(|connection| async move {
+            let (connection, slug) =
+                connection_with_slug(connection).map_err(|error| SyncFailure::new(None, error))?;
+            each(connection, slug).await
+        })
+        .buffered(SYNC_CONCURRENCY)
+        .collect()
+        .await
 }
 
 pub fn is_visible(event: &Event) -> bool {

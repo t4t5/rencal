@@ -1,4 +1,4 @@
-use super::helpers::connection_with_slug;
+use super::helpers::for_each_connection;
 use super::types::{SyncFailure, SyncPreview, SyncPreviewResult};
 use crate::routes::TauResult;
 use crate::state::AppState;
@@ -7,26 +7,13 @@ use caldir_core::{DateRange, EventChange};
 /// A calendar that fails is reported in `failures`; the rest still preview.
 pub(super) async fn handler(state: &AppState) -> TauResult<SyncPreviewResult> {
     let range = DateRange::default_sync_window();
-    let mut previews = Vec::new();
-    let mut failures = Vec::new();
-    let connections = state.caldir().connections();
+    let range = &range;
 
-    for connection in connections {
-        let (mut connection, slug) = match connection_with_slug(connection) {
-            Ok(opened) => opened,
-            Err(error) => {
-                failures.push(SyncFailure::new(None, error));
-                continue;
-            }
-        };
-
-        let diff = match connection.diff(&range).await {
-            Ok(diff) => diff,
-            Err(error) => {
-                failures.push(SyncFailure::new(Some(&slug), error));
-                continue;
-            }
-        };
+    let results = for_each_connection(state, |mut connection, slug| async move {
+        let diff = connection
+            .diff(range)
+            .await
+            .map_err(|error| SyncFailure::new(Some(&slug), error))?;
 
         let to_push_delete_count = diff
             .outgoing()
@@ -34,12 +21,22 @@ pub(super) async fn handler(state: &AppState) -> TauResult<SyncPreviewResult> {
             .filter(|c| matches!(c, EventChange::Delete(_)))
             .count() as u32;
 
-        previews.push(SyncPreview {
+        Ok(SyncPreview {
             calendar_slug: slug,
             to_push_count: diff.outgoing().len() as u32,
             to_push_delete_count,
             to_pull_count: diff.incoming().len() as u32,
-        });
+        })
+    })
+    .await;
+
+    let mut previews = Vec::new();
+    let mut failures = Vec::new();
+    for result in results {
+        match result {
+            Ok(preview) => previews.push(preview),
+            Err(failure) => failures.push(failure),
+        }
     }
 
     Ok(SyncPreviewResult { previews, failures })
@@ -87,5 +84,25 @@ mod tests {
         assert_eq!(failures.len(), 1);
         assert!(failures[0].error.message.contains(BROKEN_MESSAGE));
         assert!(!failures[0].error.message.contains("fastmail"));
+    }
+
+    #[tokio::test]
+    async fn previews_keep_calendar_order() {
+        let slugs = ["a", "b", "c", "d"];
+        let calendars: Vec<_> = slugs.iter().map(|slug| (*slug, "overlap")).collect();
+        let fixture = SyncFixture::new(&calendars);
+
+        let SyncPreviewResult { previews, failures } = handler(&fixture.state).await.unwrap();
+
+        assert!(failures.is_empty(), "{failures:?}");
+        let previewed: Vec<_> = previews.iter().map(|p| p.calendar_slug.as_str()).collect();
+        let expected: Vec<_> = fixture
+            .state
+            .caldir()
+            .connections()
+            .into_iter()
+            .map(|c| c.unwrap().local().slug().unwrap().to_string())
+            .collect();
+        assert_eq!(previewed, expected);
     }
 }
