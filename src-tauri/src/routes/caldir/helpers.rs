@@ -6,8 +6,7 @@ use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{
-    CaldirError, CalendarConfig, CalendarError, Connection, DateRange, Event, EventInstanceId,
-    Provider, ProviderSlug, Status,
+    CaldirError, CalendarConfig, Connection, DateRange, Event, Provider, ProviderSlug, Status,
 };
 use chrono::{DateTime, Utc};
 
@@ -33,34 +32,6 @@ pub fn connection_with_slug(
         .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar missing slug"))?
         .to_string();
     Ok((connection, slug))
-}
-
-/// Override one occurrence of a recurring series, keeping its SEQUENCE at or
-/// above the master's. caldir-core starts a new override at 0, which Google
-/// rejects ("Invalid sequence value") once the series has been edited, so the
-/// change would never push.
-pub fn update_recurring_instance(
-    calendar: &caldir_core::Calendar,
-    id: &EventInstanceId,
-    apply: impl FnOnce(&mut Event),
-) -> Result<(), CalendarError> {
-    let master_sequence = calendar
-        .master_event_for(id.uid().as_str())?
-        .map_or(0, |master| master.sequence);
-    let has_override = calendar.event_by_instance_id(id)?.is_some();
-
-    calendar.update_recurring_instance(id, |event| {
-        // Core bumps an existing override by one after this; a new one is
-        // written as it leaves here.
-        event.sequence = if has_override {
-            event.sequence.max(master_sequence)
-        } else {
-            master_sequence + 1
-        };
-        apply(event);
-    })?;
-
-    Ok(())
 }
 
 pub fn is_visible(event: &Event) -> bool {
@@ -294,9 +265,8 @@ async fn pull_created_calendar_events(state: &AppState, calendar_slugs: &[String
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::ProviderDirs;
-    use caldir_core::{EventTime, EventUid, Recurrence, RecurrenceId};
-    use chrono::{NaiveDate, TimeZone};
+    use caldir_core::EventTime;
+    use chrono::NaiveDate;
 
     #[test]
     fn confirmed_events_are_visible_cancelled_are_not() {
@@ -307,70 +277,5 @@ mod tests {
 
         assert!(is_visible(&confirmed));
         assert!(!is_visible(&cancelled));
-    }
-
-    const SERIES: &str = "series@caldir";
-
-    fn occurrence(day: u32) -> EventTime {
-        EventTime::DateTimeUtc(Utc.with_ymd_and_hms(2026, 4, day, 10, 0, 0).unwrap())
-    }
-
-    /// A calendar holding a daily series whose master is at SEQUENCE 4.
-    fn calendar_with_series() -> (tempfile::TempDir, caldir_core::Calendar) {
-        let dir = tempfile::tempdir().unwrap();
-        let config = dir.path().join("config.toml");
-        let data = dir.path().join("data");
-        std::fs::write(&config, format!("calendar_dir = {data:?}\n")).unwrap();
-        let state = AppState::load_from(config, ProviderDirs::default()).unwrap();
-        let calendar = state.caldir().create_calendar("work", None).unwrap();
-
-        let mut master = Event::new("Standup", occurrence(1));
-        master.uid = EventUid::new(SERIES);
-        master.recurrence = Some(Recurrence::new("FREQ=DAILY"));
-        master.sequence = 4;
-        calendar.create_event(master).unwrap();
-
-        (dir, calendar)
-    }
-
-    fn instance(day: u32) -> EventInstanceId {
-        EventInstanceId::new(
-            EventUid::new(SERIES),
-            Some(RecurrenceId::from_event_time(occurrence(day))),
-        )
-    }
-
-    fn override_sequence(calendar: &caldir_core::Calendar, day: u32) -> i32 {
-        let event = calendar.event_by_instance_id(&instance(day)).unwrap();
-        event.unwrap().event().sequence
-    }
-
-    #[test]
-    fn new_override_continues_from_the_master_sequence() {
-        let (_dir, calendar) = calendar_with_series();
-
-        update_recurring_instance(&calendar, &instance(3), |event| {
-            event.start = occurrence(5);
-        })
-        .unwrap();
-
-        assert_eq!(override_sequence(&calendar, 3), 5);
-    }
-
-    #[test]
-    fn override_left_below_the_master_sequence_catches_up() {
-        let (_dir, calendar) = calendar_with_series();
-        // What caldir-core writes on its own: an override starting from 0.
-        calendar
-            .update_recurring_instance(&instance(3), |event| event.start = occurrence(5))
-            .unwrap();
-        assert_eq!(override_sequence(&calendar, 3), 0);
-
-        update_recurring_instance(&calendar, &instance(3), |event| {
-            event.start = occurrence(6);
-        })
-        .unwrap();
-
-        assert_eq!(override_sequence(&calendar, 3), 5);
     }
 }
