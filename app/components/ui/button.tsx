@@ -37,6 +37,20 @@ const SIZES: Record<Size, string> = {
   "icon-lg": "w-(--control-height-lg) h-(--control-height-lg)",
 }
 
+/** A button's surface, for a trigger that has to look like one. */
+export function buttonClass(variant: Variant = "default", size: Size = "default") {
+  return cn(
+    "flex-row items-center justify-center gap-2 shrink-0 disabled:opacity-50 rounded-(--radius-md)",
+    VARIANTS[variant],
+    SIZES[size],
+  )
+}
+
+/** A button's label text. */
+export function buttonLabelClass(variant: Variant = "default") {
+  return cn("font-mono text-sm font-medium", displayCase(), LABELS[variant])
+}
+
 export function Button(props: {
   variant?: Variant
   size?: Size
@@ -57,17 +71,13 @@ export function Button(props: {
       accessibilityLabel={props.accessibilityLabel}
       testID={props.testID}
       class={cn(
-        "flex-row items-center justify-center gap-2 shrink-0 disabled:opacity-50",
-        props.round ? "rounded-(--radius-circle)" : "rounded-(--radius-md)",
-        VARIANTS[variant()],
-        SIZES[props.size ?? "default"],
+        buttonClass(variant(), props.size),
+        props.round && "rounded-(--radius-circle)",
         props.class,
       )}
     >
       <If when={props.label}>
-        <Text class={cn("font-mono text-sm font-medium", displayCase(), LABELS[variant()])}>
-          {props.label}
-        </Text>
+        <Text class={buttonLabelClass(variant())}>{props.label}</Text>
       </If>
       {props.children}
     </BaseButton>

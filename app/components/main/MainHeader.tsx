@@ -6,12 +6,13 @@ import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { formatHotkeyKey } from "@/components/shortcuts/ShortcutKeys"
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
-import { Button } from "@/components/ui/button"
+import { Button, buttonClass, buttonLabelClass } from "@/components/ui/button"
 import { Menu, MenuItem } from "@/components/ui/menu"
 
 import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { inspectable } from "@/lib/inspect"
+import { cn } from "@/lib/utils"
 
 import { CheckIcon, ChevronDownIcon, PlusIcon, SettingsIcon, SidebarIcon } from "@/icons"
 import { activeGroup, navigateToDate, setActiveGroup } from "@/stores/calendar"
@@ -26,15 +27,15 @@ import {
 } from "@/stores/view"
 import { resolveView, VIEWS } from "@/views/manifest"
 
-/** A dropdown with the look of the old select button. */
+/** A dropdown that looks like a secondary button, as the old select button did. */
 function SelectMenu(props: { label: string; children?: JSX.Element }) {
   return (
     <Menu
       align="end"
       popupClass="w-48"
       trigger={
-        <View class="h-(--control-height) min-w-24 flex-row items-center justify-between gap-2 rounded-(--radius-md) bg-secondary hover:bg-secondary-hover px-3">
-          <Text class="text-sm text-secondary-foreground">{props.label}</Text>
+        <View class={cn(buttonClass("secondary"), "min-w-24 justify-between")}>
+          <Text class={buttonLabelClass("secondary")}>{props.label}</Text>
           <ChevronDownIcon class="size-3 shrink-0" color={String(token("muted-foreground"))} />
         </View>
       }

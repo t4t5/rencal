@@ -141,7 +141,8 @@ export function ComposeEventInput(props: { onExit: () => void }) {
         onFocus={() => {
           if (!isDrafting()) input?.blur()
         }}
-        variant="default"
+        // Collapsed, the "+" button above paints the surface; the field's own fill would double it.
+        variant={isDrafting() || isFlying() ? "default" : "ghost"}
         placeholder={isDrafting() ? "Meeting at 3pm" : ""}
         value={shownText()}
         class={cn(shownText() && "pr-9")}
