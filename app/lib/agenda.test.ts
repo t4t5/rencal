@@ -113,6 +113,12 @@ describe("stepAgendaItem", () => {
     expect(stepAgendaItem(items, null, 1, dayOf("2026-11-02"))?.key).toBe(key("first"))
   })
 
+  it("starts past an overnight event carried over from the day before", () => {
+    const overnight = makeEvent("overnight", at("2026-11-16", 23), at("2026-11-17", 1))
+    const days = agendaItems(buildAgendaRows([overnight, meeting("test", "2026-11-17")]))
+    expect(stepAgendaItem(days, null, 1, dayOf("2026-11-17"))?.key).toBe(key("test"))
+  })
+
   it("starts from the next day with events, or else the last event", () => {
     expect(stepAgendaItem(items, null, 1, dayOf("2026-11-03"))?.key).toBe(key("later"))
     expect(stepAgendaItem(items, null, 1, dayOf("2026-12-01"))?.key).toBe(key("later"))

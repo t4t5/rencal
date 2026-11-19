@@ -23,7 +23,15 @@ export type AgendaEmptyRow = RowBase & { kind: "empty" }
 export type AgendaRow = AgendaHeaderRow | AgendaAllDayRow | AgendaTimedRow | AgendaEmptyRow
 
 /** A selectable row of the agenda: a multi-day event has one on each day. */
-export type AgendaItem = { key: string; day: number; allDay: boolean }
+export type AgendaItem = { key: string; day: number; allDay: boolean; starts: boolean }
+
+/** The agenda item for `event`'s row on `day`. */
+export const agendaItem = (event: CalendarEvent, day: number, allDay: boolean): AgendaItem => ({
+  key: eventKey(event),
+  day,
+  allDay,
+  starts: event.dateInfo.firstDay === day,
+})
 
 function groupByDay(events: readonly CalendarEvent[]): Map<number, CalendarEvent[]> {
   const byDay = new Map<number, CalendarEvent[]>()
@@ -88,17 +96,20 @@ export function keepUnchangedRows(
 export function agendaItems(rows: readonly AgendaRow[]): AgendaItem[] {
   return rows.flatMap((row): AgendaItem[] => {
     if (row.kind === "all-day") {
-      return row.events.map((event) => ({ key: eventKey(event), day: row.day, allDay: true }))
+      return row.events.map((event) => agendaItem(event, row.day, true))
     }
     if (row.kind === "timed") {
-      return [{ key: eventKey(row.event), day: row.day, allDay: false }]
+      return [agendaItem(row.event, row.day, false)]
     }
     return []
   })
 }
 
 /** The index of the row showing `item`. */
-export function rowIndexOf(rows: readonly AgendaRow[], item: AgendaItem): number {
+export function rowIndexOf(
+  rows: readonly AgendaRow[],
+  item: Pick<AgendaItem, "key" | "day">,
+): number {
   return rows.findIndex((row) => {
     if (row.day !== item.day) return false
     if (row.kind === "all-day") return row.events.some((event) => eventKey(event) === item.key)
@@ -114,7 +125,8 @@ export function headerIndexOf(rows: readonly AgendaRow[], date: Temporal.PlainDa
 
 /**
  * Where a step of `delta` lands. From no selection: the active day's first timed
- * event, or else the next day that has events, or else the last event.
+ * event that starts that day, or else the next day that has events, or else the
+ * last event.
  */
 export function stepAgendaItem(
   items: readonly AgendaItem[],
@@ -134,7 +146,11 @@ export function stepAgendaItem(
     : items.find((item) => item.day > activeDay)?.day
   if (targetDay === undefined) return items[items.length - 1]!
   const candidates = items.filter((item) => item.day === targetDay)
-  return candidates.find((item) => !item.allDay) ?? candidates[0]!
+  return (
+    candidates.find((item) => !item.allDay && item.starts) ??
+    candidates.find((item) => !item.allDay) ??
+    candidates[0]!
+  )
 }
 
 /** A multi-day timed row shows only the boundary it touches. */

@@ -19,7 +19,7 @@ import { AddAccountModal } from "@/components/settings/accounts/AddAccountModal"
 import { Button } from "@/components/ui/button"
 
 import type { AgendaAllDayRow, AgendaRow, AgendaTimedRow } from "@/lib/agenda"
-import { headerIndexOf, timeLabelKind } from "@/lib/agenda"
+import { agendaItem, headerIndexOf, timeLabelKind } from "@/lib/agenda"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 import { getMeetingUrl, hasVideoMeeting, isWithinJoinWindow } from "@/lib/conference"
@@ -105,7 +105,7 @@ function pressRow(
   press: PressEvent,
 ) {
   if (isDraftEvent(event)) return
-  selectAgendaItem({ key: eventKey(event), day, allDay }, "press")
+  selectAgendaItem(agendaItem(event, day, allDay), "press")
   void pressEvent(event, ref, press)
 }
 
