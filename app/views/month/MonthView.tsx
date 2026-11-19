@@ -96,18 +96,28 @@ export function MonthView() {
     track.show(offset, untracked(height), h)
   }
 
+  // Until the scroll view lays out, `contentOffset` places it.
+  let laidOut = false
+
   // A day whose week is fully on screen stays where it is: that's what a scroll
   // that reached it would have left.
-  cleanup(
-    onNavigate((date) => {
-      if (trackIndex(date) < 0 || trackIndex(date) >= TRACK_WEEKS) centerTrack(date)
-      const index = trackIndex(date)
-      const h = untracked(rowHeight)
-      const top = index * h
-      if (top >= offset - 1 && top + h <= offset + untracked(height) + 1) return
-      moveTo(index, true)
-    }),
-  )
+  const reveal = (date: Temporal.PlainDate) => {
+    if (!laidOut) return
+    if (trackIndex(date) < 0 || trackIndex(date) >= TRACK_WEEKS) centerTrack(date)
+    const index = trackIndex(date)
+    const h = untracked(rowHeight)
+    const top = index * h
+    if (top >= offset - 1 && top + h <= offset + untracked(height) + 1) return
+    moveTo(index, true)
+  }
+
+  // Deliberate jumps, even to the date already selected, and changes from
+  // elsewhere, like the agenda's scrolling.
+  cleanup(onNavigate(reveal))
+  effect(() => {
+    const date = activeDate()
+    untracked(() => reveal(date))
+  })
 
   const rest = (next: number) => {
     const index = next / untracked(rowHeight)
@@ -193,6 +203,7 @@ export function MonthView() {
             }}
             onScrollEnd={(event) => rest(event.offset.y)}
             onLayout={() => {
+              laidOut = true
               offset = topIndex * untracked(rowHeight)
               reportVisible()
             }}
