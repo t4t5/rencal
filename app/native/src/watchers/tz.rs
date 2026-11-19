@@ -8,8 +8,8 @@ use crate::events::AppEvent;
 use std::ffi::OsStr;
 use std::path::Path;
 
-use notify::RecursiveMode;
 use crate::host::AppHandle;
+use notify::RecursiveMode;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
 

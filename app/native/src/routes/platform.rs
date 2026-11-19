@@ -42,7 +42,6 @@ use crate::deep_links::{EventDeepLink, PluginInstallLink};
 use crate::state::AppState;
 use std::sync::Arc;
 
-
 #[derive(Clone)]
 pub struct PlatformApiImpl {
     state: Arc<AppState>,

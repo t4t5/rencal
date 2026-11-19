@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 import { activeDate, onNavigate } from "@/stores/calendar"
 import { createDragHandlers, setDragScroller } from "@/stores/drag"
 import { firstDayOfWeek } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 import { openDayMenu } from "@/views/event-block"
 import { trackWindow } from "@/views/track-window"
 import { holdVisibleDays } from "@/views/visible-range"
@@ -53,7 +53,7 @@ function WeekDayLabels() {
               (label() === "Sat" || label() === "Sun") && "bg-weekend",
             )}
           >
-            <Text class={cn("font-mono text-2xs text-muted-foreground font-medium", displayCase())}>
+            <Text class={cn(typography.numericalSm(), "text-muted-foreground font-medium")}>
               {label()}
             </Text>
           </View>

@@ -12,6 +12,7 @@ import { isValidContactEmail, suggestContacts } from "@/lib/contact-suggestions"
 import { cn } from "@/lib/utils"
 
 import { UserIcon } from "@/icons"
+import { typography } from "@/themes"
 
 import { RemoveItemButton } from "./RemoveItemButton"
 
@@ -26,11 +27,13 @@ function AttendeeRow(props: { attendee: EventAttendee; label?: string; onRemove?
           <StatusDot status={props.attendee.response_status} />
         </ItemMedia>
         <ItemContent class="flex-row items-center gap-2">
-          <Text class="truncate text-sm text-foreground">
+          <Text class={cn(typography.body(), "truncate text-foreground")}>
             {props.attendee.name ?? props.attendee.email}
           </Text>
           <If when={props.label}>
-            <Text class="shrink-0 text-sm text-muted-foreground">{props.label}</Text>
+            <Text class={cn(typography.body(), "shrink-0 text-muted-foreground")}>
+              {props.label}
+            </Text>
           </If>
         </ItemContent>
         <If when={props.onRemove}>
@@ -77,11 +80,13 @@ function Suggestions(props: {
               index() === props.highlighted && "bg-accent",
             )}
           >
-            <Text class="truncate text-sm text-foreground">
+            <Text class={cn(typography.body(), "truncate text-foreground")}>
               {contact().name ?? contact().email}
             </Text>
             <If when={contact().name}>
-              <Text class="truncate text-xs text-muted-foreground">{contact().email}</Text>
+              <Text class={cn(typography.caption(), "truncate text-muted-foreground")}>
+                {contact().email}
+              </Text>
             </If>
           </View>
         )}

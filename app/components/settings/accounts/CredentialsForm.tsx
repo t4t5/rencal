@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { getErrorMessage, type ProviderField } from "@/lib/api"
+import { cn } from "@/lib/utils"
+
+import { typography } from "@/themes"
 
 import { connectWithCredentials, isConnecting, type ModalStep } from "./providers"
 
@@ -50,7 +53,7 @@ export function CredentialsForm(props: {
               onSubmit={() => void submit()}
             />
             <If when={field().help}>
-              <Text class="text-xs text-muted-foreground">{field().help}</Text>
+              <Text class={cn(typography.caption(), "text-muted-foreground")}>{field().help}</Text>
             </If>
           </View>
         )}

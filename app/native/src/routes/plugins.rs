@@ -5,7 +5,6 @@ use crate::plugins::{
 use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
-
 #[derive(Clone)]
 pub struct PluginsApiImpl {
     manager: PluginManager,

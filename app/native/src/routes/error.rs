@@ -292,5 +292,4 @@ mod tests {
             "Could not write config at config.toml: permission denied"
         );
     }
-
 }

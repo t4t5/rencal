@@ -8,6 +8,7 @@ import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { activeDrag, dragRole, eventDragHandlers } from "@/stores/drag"
 import { timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 import {
   blockStyle,
   isDeclined,
@@ -104,7 +105,8 @@ export function TimedEventBlock(props: {
       </If>
       <Text
         class={cn(
-          "text-xs font-medium leading-tight",
+          typography.caption(),
+          "font-medium leading-tight",
           (mode() === "xs" || mode() === "sm") && "truncate",
           mode() === "xs" && "min-w-0 flex-1",
           mode() === "lg" && "line-clamp-2",
@@ -117,7 +119,9 @@ export function TimedEventBlock(props: {
       <Text
         class={cn(
           "leading-tight opacity-70",
-          mode() === "xs" ? "text-2xs shrink-0" : "text-xs truncate",
+          mode() === "xs"
+            ? cn(typography.micro(), "shrink-0")
+            : cn(typography.caption(), "truncate"),
         )}
         style={{ color: paint().foreground }}
       >
@@ -169,7 +173,11 @@ export function AllDayBarBlock(props: {
       >
         <View style={props.titleShift ? { translate: [props.titleShift(), 0] } : undefined}>
           <Text
-            class={cn("text-xs leading-4 truncate", isDeclined(event()) && "line-through")}
+            class={cn(
+              typography.caption(),
+              "leading-4 truncate",
+              isDeclined(event()) && "line-through",
+            )}
             style={{ color: paint().foreground }}
           >
             {event().summary || UNTITLED}

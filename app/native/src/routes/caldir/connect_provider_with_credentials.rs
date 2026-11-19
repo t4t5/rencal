@@ -1,11 +1,11 @@
 use super::connect_provider;
 use super::helpers::{build_connect_options, provider};
 use super::types::{CredentialFieldInput, CredentialsConnectResult};
+use crate::host::AppHandle;
 use crate::oauth;
 use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
-use crate::host::AppHandle;
 
 pub(super) async fn handler(
     state: &AppState,

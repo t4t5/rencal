@@ -20,6 +20,7 @@ import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { lastTimedRange } from "@/lib/last-timed-range"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 import { toast } from "@/lib/toast"
+import { cn } from "@/lib/utils"
 
 import { MoreHorizIcon } from "@/icons"
 import { calendarOf, calendars } from "@/stores/calendar"
@@ -27,6 +28,7 @@ import { triggerDelete } from "@/stores/delete"
 import { triggerDuplicate } from "@/stores/duplicate"
 import { setActiveEventKey } from "@/stores/events"
 import { requestSync } from "@/stores/sync"
+import { typography } from "@/themes"
 
 import { EventInfo } from "./EventInfo"
 
@@ -42,8 +44,8 @@ function OverflowMenu(props: { onDuplicate: () => void; onDelete: () => void }) 
       }
     >
       <MenuItem onSelect={props.onDuplicate} class="justify-between gap-4">
-        <Text class="text-sm text-foreground">Duplicate event</Text>
-        <Text class="text-xs text-muted-foreground">D</Text>
+        <Text class={cn(typography.body(), "text-foreground")}>Duplicate event</Text>
+        <Text class={cn(typography.caption(), "text-muted-foreground")}>D</Text>
       </MenuItem>
       <MenuItem label="Delete event" destructive onSelect={props.onDelete} />
     </Menu>

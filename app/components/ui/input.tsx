@@ -4,6 +4,8 @@ import { Input as BaseInput, type InputProps } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
+import { controlSurface, typography } from "@/themes"
+
 type Props = InputProps & {
   /** `ghost` shows no box until hovered or focused, `default` always does. */
   variant?: "ghost" | "default"
@@ -11,7 +13,8 @@ type Props = InputProps & {
   ref?: InputRef | ((ref: InputRef) => void)
 }
 
-const INPUT_TEXT = "text-sm text-foreground placeholder:text-placeholder-foreground"
+const inputText = () =>
+  cn(typography.body(), "text-foreground placeholder:text-placeholder-foreground")
 
 /** Text input with the old field look: no box until hovered or focused. */
 export function Input(props: Props) {
@@ -20,10 +23,11 @@ export function Input(props: Props) {
     <BaseInput
       {...rest}
       class={cn(
-        INPUT_TEXT,
+        inputText(),
         "h-(--control-height) w-full rounded-(--radius-md) border px-2",
         "border-transparent hover:border-input focus:border-transparent focus:bg-secondary",
         own.variant === "default" && "bg-secondary",
+        controlSurface(),
         own.invalid && "border-destructive",
         own.class,
       )}
@@ -34,5 +38,5 @@ export function Input(props: Props) {
 /** The text alone, for a control whose wrapper owns height and border. */
 export function InputInner(props: Props) {
   const [own, rest] = split(props, ["class"])
-  return <BaseInput {...rest} class={cn(INPUT_TEXT, "min-w-0 flex-1", own.class)} />
+  return <BaseInput {...rest} class={cn(inputText(), "min-w-0 flex-1", own.class)} />
 }

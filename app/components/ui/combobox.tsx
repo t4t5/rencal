@@ -3,7 +3,9 @@ import { Combobox as BaseCombobox, type ComboboxProps } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
-import { LIST_ROW, SELECT_GROUP, SELECT_POPUP } from "./select"
+import { typography } from "@/themes"
+
+import { LIST_ROW, SELECT_POPUP, selectGroupClass } from "./select"
 
 type OpenChange = Parameters<NonNullable<ComboboxProps["onOpenChange"]>>[0]
 
@@ -30,7 +32,9 @@ export function Combobox(props: ComboboxProps & { variant?: "ghost" | "default" 
       offset={4}
       margin={8}
       empty={
-        <Text class="px-2 py-6 text-center text-sm text-muted-foreground">No results found.</Text>
+        <Text class={cn(typography.body(), "px-2 py-6 text-center text-muted-foreground")}>
+          No results found.
+        </Text>
       }
       {...rest}
       open={isOpen()}
@@ -42,12 +46,13 @@ export function Combobox(props: ComboboxProps & { variant?: "ghost" | "default" 
         own.class,
       )}
       inputClass={cn(
-        "min-w-0 flex-1 text-sm text-foreground placeholder:text-placeholder-foreground",
+        typography.body(),
+        "min-w-0 flex-1 text-foreground placeholder:text-placeholder-foreground",
         own.inputClass,
       )}
       popupClass={cn(SELECT_POPUP, own.popupClass)}
       itemClass={cn(LIST_ROW, own.itemClass)}
-      groupClass={SELECT_GROUP}
+      groupClass={selectGroupClass()}
     />
   )
 }

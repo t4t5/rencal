@@ -30,6 +30,7 @@ import { dateInEventZone, type EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { firstDayOfWeek } from "@/stores/settings"
+import { typography } from "@/themes"
 
 // Indexed Monday = 0 … Sunday = 6, like rrule.js.
 const WEEKDAYS = [
@@ -81,7 +82,7 @@ function ReadOnlyRecurrence(props: {
           This repeat rule can't be edited in renCal. Choose another option to replace it.
         </DialogDescription>
       </DialogHeader>
-      <Text class="text-sm">{describeRecurrence(props.value, props.start)}</Text>
+      <Text class={typography.body()}>{describeRecurrence(props.value, props.start)}</Text>
       <DialogFooter>
         <Button variant="secondary" label="Close" onPress={props.onClose} />
       </DialogFooter>
@@ -149,7 +150,7 @@ function CustomRecurrenceForm(props: Props) {
 
       <View class="gap-8">
         <View class="flex-row items-center gap-4">
-          <Text class="w-10 text-sm">Every</Text>
+          <Text class={cn(typography.body(), "w-10")}>Every</Text>
           <Input
             variant="default"
             keyboardType="numeric"
@@ -171,7 +172,7 @@ function CustomRecurrenceForm(props: Props) {
 
         <If when={freq() === RRule.WEEKLY}>
           <View class="flex-row items-center gap-4">
-            <Text class="w-10 text-sm">On</Text>
+            <Text class={cn(typography.body(), "w-10")}>On</Text>
             <View class="flex-row flex-wrap gap-1.5">
               <Each of={weekdayOrder()}>
                 {(day) => {
@@ -187,7 +188,8 @@ function CustomRecurrenceForm(props: Props) {
                     >
                       <Text
                         class={cn(
-                          "text-xs font-medium",
+                          typography.caption(),
+                          "font-medium",
                           selected() ? "text-primary-foreground" : "text-secondary-foreground",
                         )}
                       >
@@ -202,7 +204,7 @@ function CustomRecurrenceForm(props: Props) {
         </If>
 
         <View class="gap-2">
-          <Text class="text-sm">Ends</Text>
+          <Text class={typography.body()}>Ends</Text>
           <RadioGroup class="gap-2">
             <EndRow
               kind="never"
@@ -248,7 +250,7 @@ function CustomRecurrenceForm(props: Props) {
                   invalid={endKind() === "after" && !isCountValid()}
                   onChange={({ value }) => countText.set(value)}
                 />
-                <Text class="text-sm text-muted-foreground">
+                <Text class={cn(typography.body(), "text-muted-foreground")}>
                   {count() === 1 ? "time" : "times"}
                 </Text>
               </View>
@@ -277,7 +279,7 @@ function EndRow(props: {
       checked={props.current === props.kind}
       onSelect={() => props.onSelect(props.kind)}
     >
-      <Text class="text-sm">{props.label}</Text>
+      <Text class={typography.body()}>{props.label}</Text>
     </Radio>
   )
 }

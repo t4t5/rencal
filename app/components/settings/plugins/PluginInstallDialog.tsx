@@ -5,6 +5,9 @@ import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/componen
 
 import { api, getErrorMessage } from "@/lib/api"
 import { toast } from "@/lib/toast"
+import { cn } from "@/lib/utils"
+
+import { typography } from "@/themes"
 
 import { PluginBadges } from "./PluginBadge"
 import { createPluginAction, PluginDetails } from "./PluginDetails"
@@ -57,7 +60,7 @@ function InstallDialog(props: { repo: string; onClose: () => void }) {
       }}
     >
       <DialogHeader class="gap-3">
-        <DialogTitle class="pr-6 text-left text-lg">{plugin().name}</DialogTitle>
+        <DialogTitle class="pr-6 text-left">{plugin().name}</DialogTitle>
         <PluginBadges plugin={plugin()} />
         <If when={plugin().description}>
           <DialogDescription>{plugin().description}</DialogDescription>
@@ -66,7 +69,7 @@ function InstallDialog(props: { repo: string; onClose: () => void }) {
       <ErrorText message={loadError()} />
       <If
         when={plugins() || loadError()}
-        else={<Text class="text-sm text-muted-foreground">Loading plugin…</Text>}
+        else={<Text class={cn(typography.body(), "text-muted-foreground")}>Loading plugin…</Text>}
       >
         <View class="gap-4">
           <PluginDetails plugin={plugin()} state={state} />

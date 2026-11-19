@@ -26,7 +26,7 @@ Run from `app/`, with `~/.local/bin` on `PATH`. The `nsh` CLI must match the ver
 
 - Imports are absolute (`@/`); relative only for same-directory siblings. No `any`.
 - Colors are theme tokens (`bg-selected`, `text-muted-foreground`). The one exception is event colors, from `lib/event-paint.ts`, which come from data.
-- Typography that was `data-typography="heading|button|numerical"` is `font-mono` with `displayCase()` from `@/themes`, a class that follows the theme; a static `uppercase` stays uppercase on themes that turned it off. Headings take their weight from `displayWeight()` (regular unless the theme sets `text-heading--font-weight`), not `font-bold`. Radii go through tokens (`rounded-(--radius-md)`), because Ren's are 0.
+- Text takes a role, never a scale size: `typography.caption()` from `@/themes` (the roles are in `themes/typography.ts`) is the role's size with its face's font, case and weight, all from the theme. Weight or color classes go after it; `font-mono` is only for code. Radii go through tokens (`rounded-(--radius-md)`), because Ren's are 0.
 - Control sizes go through tokens: `h-(--control-height)`, `p-(--layout-padding)`.
 - Backend access goes through `@/lib/api`, never `rpc` directly.
 

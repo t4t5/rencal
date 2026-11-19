@@ -8,6 +8,7 @@ import { eventPaint } from "@/lib/event-paint"
 import { cn } from "@/lib/utils"
 
 import { calendarOf, calendars } from "@/stores/calendar"
+import { typography } from "@/themes"
 
 const Swatch = (props: { calendar?: Calendar }) => (
   <View
@@ -44,7 +45,7 @@ export function CalendarSelect(props: {
             </If>
           </ItemMedia>
           <ItemContent>
-            <Text class="truncate text-sm text-foreground">
+            <Text class={cn(typography.body(), "truncate text-foreground")}>
               {props.calendar ? props.calendar.name || props.calendar.slug : "Select Calendar"}
             </Text>
           </ItemContent>

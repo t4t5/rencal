@@ -10,6 +10,8 @@ import {
 
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 import { POPUP_SURFACE } from "./popover"
 
 const POPUP = cn(POPUP_SURFACE, "min-w-32 p-1 transition-all duration-100 ease-out")
@@ -66,7 +68,9 @@ export function MenuItem(props: {
       )}
     >
       <If when={props.label}>
-        <Text class={cn("text-sm", props.destructive && "text-destructive")}>{props.label}</Text>
+        <Text class={cn(typography.body(), props.destructive && "text-destructive")}>
+          {props.label}
+        </Text>
       </If>
       {props.children}
     </BaseMenuItem>

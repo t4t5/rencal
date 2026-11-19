@@ -10,7 +10,7 @@ import { activeDate, navigateToDate } from "@/stores/calendar"
 import { currentDay } from "@/stores/clock"
 import { createEventAt, createSelection } from "@/stores/drag"
 import { firstDayOfWeek, showWeekNumbers } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { AllDayBarView, HiddenEvents, SelectionBar, TimedEvent } from "./EventBlocks"
 import {
@@ -61,7 +61,7 @@ function Day(props: {
     >
       <View class="flex-row items-center justify-end gap-1 p-1">
         <If when={props.date().day === 1 || selected()}>
-          <Text class={cn("font-mono text-xs text-muted-foreground", displayCase())}>
+          <Text class={cn(typography.numerical(), "text-muted-foreground")}>
             {formatMonth(props.date(), "long")}
           </Text>
         </If>
@@ -72,7 +72,7 @@ function Day(props: {
             selected() && !isToday() && "bg-selected",
           )}
         >
-          <Text class={cn("font-mono text-xs", isToday() && "text-today-foreground")}>
+          <Text class={cn(typography.numerical(), isToday() && "text-today-foreground")}>
             {props.date().day}
           </Text>
         </View>
@@ -186,7 +186,7 @@ export function WeekRow(props: { index: () => number; height: () => number; widt
       <MonthBoundary column={monthStart} width={props.width} />
       <If when={showWeekNumbers()}>
         <Text
-          class="absolute left-1 top-1 font-mono text-2xs text-muted-foreground"
+          class={cn(typography.numericalSm(), "absolute left-1 top-1 text-muted-foreground")}
           style={{ pointerEvents: "none" }}
         >
           {isoWeekNumber(days()[0]!, firstDayOfWeek())}

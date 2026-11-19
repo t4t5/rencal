@@ -6,8 +6,10 @@ import { InputGroup } from "@/components/ui/input-group"
 import { Tooltip } from "@/components/ui/tooltip"
 
 import { type DetectedUrl, detectedUrlSourceLabel, toOpenableUrl } from "@/lib/event-url"
+import { cn } from "@/lib/utils"
 
 import { ArrowUpRightIcon, LinkIcon, QuestionMarkCircleIcon } from "@/icons"
+import { typography } from "@/themes"
 
 /**
  * A read-only link row. Only the URL text is pressable, so a stray press on the
@@ -21,7 +23,7 @@ function UrlLink(props: { url: string; hint?: string }) {
         <Text
           role="link"
           onPress={() => void openUrl(toOpenableUrl(props.url))}
-          class="truncate py-1 text-sm text-foreground hover:underline"
+          class={cn(typography.body(), "truncate py-1 text-foreground hover:underline")}
         >
           {props.url}
         </Text>

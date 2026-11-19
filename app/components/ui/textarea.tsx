@@ -4,6 +4,8 @@ import { Input as BaseInput, type InputProps } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 const MIN_VERTICAL_PADDING = 6
 const BORDER_WIDTH = 1
 
@@ -50,7 +52,8 @@ function GrowingInput(props: Props & { bordered?: boolean }) {
         paddingVertical: padding(),
       }}
       class={cn(
-        "min-w-0 text-sm text-foreground placeholder:text-placeholder-foreground",
+        typography.body(),
+        "min-w-0 text-foreground placeholder:text-placeholder-foreground",
         own.class,
       )}
     />

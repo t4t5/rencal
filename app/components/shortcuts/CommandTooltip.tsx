@@ -3,7 +3,10 @@ import { Tooltip } from "nsh/base"
 
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
+import { cn } from "@/lib/utils"
+
 import { actionKeys } from "@/stores/commands"
+import { typography } from "@/themes"
 
 import { formatHotkeyKey } from "./ShortcutKeys"
 
@@ -21,7 +24,7 @@ export function CommandTooltip(props: { text: string; action: string; open?: boo
       open={props.open}
       class="flex-row items-center gap-2 rounded-(--radius-md) bg-tooltip px-2 py-1"
     >
-      <Text class="text-xs text-tooltip-foreground">{props.text}</Text>
+      <Text class={cn(typography.caption(), "text-tooltip-foreground")}>{props.text}</Text>
       <If when={keys().length > 0}>
         <KbdGroup>
           <Each of={keys()}>{(key) => <Kbd label={key()} />}</Each>

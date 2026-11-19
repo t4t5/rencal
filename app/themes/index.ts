@@ -7,9 +7,12 @@
 import { setTheme, signal, type Theme } from "nsh"
 import { Backend } from "rencal/native"
 
+import { cn } from "@/lib/utils"
+
 import baseline from "@/theme.json"
 
 import type { Appearance } from "./manifest"
+import { setFaces, typographyDefaults } from "./typography"
 
 const BASE_STEP = 5
 const REM = 16
@@ -18,16 +21,17 @@ export type Vars = Record<string, string>
 
 const BASELINE = baseline.cssVars.theme as Vars
 
+/** Drawn as classes (`surfacesOf`): NSH reads a lone `var()` as a color, so they stay out of its file. */
+const SURFACE_TOKENS = ["button-shadow", "button-shadow-active", "control", "control-shadow"]
+
 /** Tokens CSS themes set that NSH has no use for: they're read here, not drawn. */
 const UNDRAWN = [
   "surface-tint-step",
-  "font-heading",
-  "font-button",
-  "font-numerical",
-  "text-heading--transform",
-  "text-button--transform",
-  "text-numerical--transform",
-  "text-heading--font-weight",
+  ...["heading", "button", "numerical"].flatMap((face) => [
+    `text-${face}--transform`,
+    `text-${face}--font-weight`,
+    `text-${face}--letter-spacing`,
+  ]),
 ]
 
 function length(value: string | undefined): number | null {
@@ -81,69 +85,133 @@ function derivedControls(overrides: Vars): Vars {
   }
 }
 
-const GENERIC_FAMILY = /^["']?(system-ui|sans-serif|ui-sans-serif|-apple-system)/
+const GENERIC_FAMILY = /^["']?(system-ui|sans-serif|ui-sans-serif|-apple-system)\b/
 
-/** `font-mono` is what the app's headings, buttons and numbers are drawn with. */
-function derivedFont(overrides: Vars): Vars {
-  const family =
-    overrides["font-button"] ?? overrides["font-heading"] ?? overrides["font-numerical"]
-  if (!family || family.includes("--font-mono")) return {}
-  const value = family.includes("--font-sans") ? (overrides["font-sans"] ?? "sans") : family
-  return { "font-mono": GENERIC_FAMILY.test(value) ? "sans" : value }
+/**
+ * NSH reads var() only in colors, so fonts and type sizes are resolved here:
+ * `--font-heading: var(--font-sans)` takes that font, `--text-body` its size. A
+ * font that is the system's is named `sans`, which NSH draws as it.
+ */
+function resolvedTypography(vars: Vars): Vars {
+  const resolved: Vars = {}
+  for (const [name, value] of Object.entries(vars)) {
+    if (name.startsWith("font-")) {
+      const font = resolveVars(value, vars)
+      resolved[name] = name !== "font-sans" && (!font || GENERIC_FAMILY.test(font)) ? "sans" : font
+    } else if (name.startsWith("text-") && value.includes("var(")) {
+      resolved[name] = resolveVars(value, vars)
+    }
+  }
+  return resolved
 }
 
 /** The toast stands out by inverting on a light page. */
 const derivedToast = (mode: Appearance): Vars =>
   mode === "light" ? { toast: "var(--foreground)", "toast-foreground": "var(--background)" } : {}
 
-/** The theme file of `overrides` over the baseline. */
-export function themeFile(overrides: Vars, mode: Appearance): Theme {
+/** Every token of `overrides` over the baseline, with what's derived from them. */
+function allVars(overrides: Vars, mode: Appearance): Vars {
   const step = Number.parseFloat(overrides["surface-tint-step"] ?? "") || BASE_STEP
   const vars: Vars = {
     ...steppedBaseline(step),
     ...derivedRadii(overrides),
     ...derivedControls(overrides),
-    ...derivedFont(overrides),
     ...derivedToast(mode),
+    ...typographyDefaults(),
     ...overrides,
   }
-  for (const name of UNDRAWN) delete vars[name]
+  return { ...vars, ...resolvedTypography(vars) }
+}
+
+/** The theme file of `overrides` over the baseline. */
+export function themeFile(overrides: Vars, mode: Appearance): Theme {
+  const vars = allVars(overrides, mode)
+  for (const name of [...UNDRAWN, ...SURFACE_TOKENS]) delete vars[name]
   return { cssVars: { theme: vars } }
 }
 
-/** `uppercase` unless the theme turned it off; themes set the three alike. */
-const caseOf = (overrides: Vars) => {
-  const transform = overrides["text-button--transform"] ?? overrides["text-heading--transform"]
-  return transform === undefined || transform === "uppercase" ? "uppercase" : "normal-case"
+/**
+ * `value` with its `var()`s replaced, fallbacks (`var(--a, var(--b))`) too: an
+ * unset name, or one that refers back to itself, takes its fallback, else "".
+ */
+export function resolveVars(
+  value: string,
+  vars: Vars,
+  seen: ReadonlySet<string> = new Set(),
+): string {
+  let out = ""
+  let index = 0
+  for (;;) {
+    const start = value.indexOf("var(", index)
+    if (start < 0) return out + value.slice(index)
+    let end = start + 3
+    for (let depth = 0; end < value.length; end++) {
+      if (value[end] === "(") depth++
+      else if (value[end] === ")" && --depth === 0) break
+    }
+    const inner = value.slice(start + 4, end)
+    const comma = inner.indexOf(",")
+    const name = (comma < 0 ? inner : inner.slice(0, comma)).trim().replace(/^--/, "")
+    const own = vars[name]
+    const replacement =
+      own !== undefined && !seen.has(name)
+        ? resolveVars(own, vars, new Set([...seen, name]))
+        : comma < 0
+          ? ""
+          : resolveVars(inner.slice(comma + 1).trim(), vars, seen)
+    out += value.slice(index, start) + replacement
+    index = end + 1
+  }
 }
 
-/** Regular unless the theme asks for bold headings. */
-const headingWeightOf = (overrides: Vars) => {
-  const weight = overrides["text-heading--font-weight"]
-  return weight === "bold" || Number(weight) >= 600 ? "font-bold" : "font-normal"
+/** An arbitrary class: `shadow-[inset_1px_1px_0_#fff,…]`. */
+const arbitrary = (utility: string, value: string) =>
+  `${utility}-[${value
+    .trim()
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\s+/g, "_")}]`
+
+export type Surfaces = { button: string; control: string }
+
+/**
+ * Bevels and fills NSH has no token kind for: `--button-shadow` (pressed:
+ * `--button-shadow-active`), and fields' `--control-shadow` and `--control`.
+ * Each is a class only when the theme sets it, so other themes keep the kit's look.
+ */
+export function surfacesOf(overrides: Vars, mode: Appearance): Surfaces {
+  const vars = allVars(overrides, mode)
+  const own = (name: string, utility: string, variant = "") => {
+    const value = overrides[name] && resolveVars(overrides[name], vars)
+    return value && value !== "none" ? variant + arbitrary(utility, value) : ""
+  }
+  return {
+    button: cn(own("button-shadow", "shadow"), own("button-shadow-active", "shadow", "active:")),
+    control: cn(own("control", "bg"), own("control-shadow", "shadow")),
+  }
 }
 
 const appearance = signal<Appearance>("dark")
 const paintVersion = signal(0)
-const textCase = signal<"uppercase" | "normal-case">("uppercase")
-const headingWeight = signal<"font-normal" | "font-bold">("font-normal")
+const surfaces = signal<Surfaces>({ button: "", control: "" })
+
+/** A theme's button bevel, as classes ("" for none). */
+export const buttonSurface = () => surfaces().button
+
+/** A theme's field well, as classes ("" for none). */
+export const controlSurface = () => surfaces().control
 
 export const activeAppearance = () => appearance()
 
 /** Changes when the theme does, for colors computed from its tokens. */
 export const themeVersion = () => paintVersion()
 
-/** The case class of what was `data-typography`; a theme decides it. */
-export const displayCase = () => textCase()
-
-/** The weight class of headings; a theme decides it. */
-export const displayWeight = () => headingWeight()
+export { typography } from "./typography"
 
 export async function applyTheme(overrides: Vars, mode: Appearance): Promise<void> {
   setTheme(themeFile(overrides, mode))
   appearance.set(mode)
-  textCase.set(caseOf(overrides))
-  headingWeight.set(headingWeightOf(overrides))
+  setFaces(overrides)
+  surfaces.set(surfacesOf(overrides, mode))
   paintVersion.update((version) => version + 1)
 }
 

@@ -4,8 +4,8 @@ use std::ffi::OsStr;
 use std::path::Path;
 use std::sync::Arc;
 
-use notify::RecursiveMode;
 use crate::host::AppHandle;
+use notify::RecursiveMode;
 
 use crate::events::AppEvent;
 use crate::external_themes;

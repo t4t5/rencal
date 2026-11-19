@@ -14,7 +14,7 @@ import { Select } from "@/components/ui/select"
 import { api, getErrorMessage, type InstalledPlugins, type PluginCatalog } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { PluginBadges } from "./PluginBadge"
 import { PluginSheet } from "./PluginSheet"
@@ -127,17 +127,17 @@ export function PluginsPage() {
         </View>
         <View class="flex-row items-center justify-between gap-4">
           <If when={installed()}>
-            <Text class="text-sm text-muted-foreground tabular-nums">
+            <Text class={cn(typography.body(), "text-muted-foreground tabular-nums")}>
               {pluginCount(visible().length, plugins().length)}
             </Text>
           </If>
           <Checkbox checked={installedOnly()} onChange={(value) => installedOnly.set(value)}>
-            <Text class="text-sm">Installed only</Text>
+            <Text class={typography.body()}>Installed only</Text>
           </Checkbox>
         </View>
       </View>
       <SettingsContent contentClass="min-w-0 gap-3">
-        <Text class="text-xs text-muted-foreground">
+        <Text class={cn(typography.caption(), "text-muted-foreground")}>
           Themes and providers work as usual. Plugin views are React modules, so they can't load
           here until they have a native build.
         </Text>
@@ -160,10 +160,10 @@ export function PluginsPage() {
           </View>
         </If>
         <If when={!installed() && !listError()}>
-          <Text class="text-sm text-muted-foreground">Loading plugins…</Text>
+          <Text class={cn(typography.body(), "text-muted-foreground")}>Loading plugins…</Text>
         </If>
         <If when={installed() && catalog() && !catalog()?.error && visible().length === 0}>
-          <Text class="text-sm text-muted-foreground">{emptyMessage()}</Text>
+          <Text class={cn(typography.body(), "text-muted-foreground")}>{emptyMessage()}</Text>
         </If>
         <If when={visible().length > 0}>
           <View class="grid grid-cols-2 gap-3">
@@ -200,14 +200,20 @@ function PluginCard(props: { plugin: PluginListItem; onSelect: () => void }) {
       onPress={props.onSelect}
       class="min-w-0 gap-3 rounded-(--radius-lg) border border-border p-4 hover:border-muted-foreground"
     >
-      <Text class={cn("truncate font-mono text-sm", displayCase())}>{props.plugin.name}</Text>
+      <Text class={cn(typography.section(), "truncate")}>{props.plugin.name}</Text>
       <PluginBadges plugin={props.plugin} />
       <If when={props.plugin.description}>
-        <Text class="line-clamp-2 text-sm text-muted-foreground">{props.plugin.description}</Text>
+        <Text class={cn(typography.body(), "line-clamp-2 text-muted-foreground")}>
+          {props.plugin.description}
+        </Text>
       </If>
-      <Text class="truncate text-xs text-muted-foreground">by {pluginOwner(props.plugin)}</Text>
+      <Text class={cn(typography.caption(), "truncate text-muted-foreground")}>
+        by {pluginOwner(props.plugin)}
+      </Text>
       <If when={props.plugin.installed?.error}>
-        <Text class="line-clamp-2 text-xs text-destructive">{props.plugin.installed?.error}</Text>
+        <Text class={cn(typography.caption(), "line-clamp-2 text-destructive")}>
+          {props.plugin.installed?.error}
+        </Text>
       </If>
     </BaseButton>
   )

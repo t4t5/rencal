@@ -4,6 +4,7 @@ import { Command as BaseCommand, type CommandProps } from "nsh/base"
 import { cn } from "@/lib/utils"
 
 import { SearchIcon } from "@/icons"
+import { typography } from "@/themes"
 
 /** A search field over rows: the palette's look, with every part styled. */
 export function Command(props: CommandProps) {
@@ -27,7 +28,8 @@ export function Command(props: CommandProps) {
         own.searchBarClass,
       )}
       searchClass={cn(
-        "h-full flex-1 text-sm text-popover-foreground placeholder:text-placeholder-foreground",
+        typography.body(),
+        "h-full flex-1 text-popover-foreground placeholder:text-placeholder-foreground",
         own.searchClass,
       )}
       listClass={cn("max-h-[300px] p-1", own.listClass)}
@@ -36,7 +38,11 @@ export function Command(props: CommandProps) {
         "group min-h-8 justify-center rounded-(--radius-sm) px-2 py-1.5 focus:bg-accent disabled:opacity-50",
         own.itemClass,
       )}
-      groupClass={cn("px-2 py-1.5 text-xs font-medium text-muted-foreground", own.groupClass)}
+      groupClass={cn(
+        typography.caption(),
+        "px-2 py-1.5 font-medium text-muted-foreground",
+        own.groupClass,
+      )}
     />
   )
 }

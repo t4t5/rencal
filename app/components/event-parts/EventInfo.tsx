@@ -11,6 +11,8 @@ import type { EventTime } from "@/lib/event-time"
 import { detectEventUrl } from "@/lib/event-url"
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 import { AllDayCheckbox } from "./inputs/AllDayCheckbox"
 import { AttendeesDisplay } from "./inputs/AttendeesDisplay"
 import { AvailabilitySelect } from "./inputs/AvailabilitySelect"
@@ -102,7 +104,7 @@ export function EventInfo(props: {
               testID="event-summary"
               placeholder="Event Title"
               value={props.summary ?? ""}
-              class="text-base font-medium"
+              class={cn(typography.bodyLg(), "font-medium")}
               readonly={props.readonly}
               submitBehavior="submit"
               onChange={({ value }) => props.onChangeSummary(value)}

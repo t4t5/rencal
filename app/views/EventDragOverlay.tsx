@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 
 import { activeDrag, type ActiveEventDrag, dragPointer, type DragFloat } from "@/stores/drag"
 import { timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 import { paintOf, UNTITLED } from "@/views/event-block"
 
 function floatPosition(float: DragFloat, x: number, y: number) {
@@ -37,13 +38,13 @@ function FloatCard(props: { drag: () => ActiveEventDrag; float: () => DragFloat 
       }}
     >
       <Text
-        class="text-xs font-medium leading-tight truncate"
+        class={cn(typography.caption(), "font-medium leading-tight truncate")}
         style={{ color: paint().foreground }}
       >
         {event().summary || UNTITLED}
       </Text>
       <If when={block() && !isAllDay(range().start)}>
-        <Text class="text-xs text-muted-foreground leading-tight truncate">
+        <Text class={cn(typography.caption(), "text-muted-foreground leading-tight truncate")}>
           {formatTime(range().start, timeFormat())} – {formatTime(range().end, timeFormat())}
         </Text>
       </If>

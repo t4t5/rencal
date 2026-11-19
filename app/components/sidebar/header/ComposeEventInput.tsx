@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { CloseIcon } from "@/icons"
 import { navigateToDate } from "@/stores/calendar"
 import { createDraftEvent, draftEvent, draftText, isDrafting, setDraftText } from "@/stores/draft"
+import { typography } from "@/themes"
 
 import { flyingText, isFlying, startFlight } from "./FlyAnimation"
 
@@ -41,7 +42,7 @@ function MagicSegments(props: { text: string; caretIndex: number; caretX: number
       style={{ pointerEvents: "none", paddingLeft: TEXT_INSET }}
     >
       <Text
-        class="absolute text-sm text-transparent"
+        class={cn(typography.body(), "absolute text-transparent")}
         onLayout={({ bounds }) => beforeCaret.set(bounds.size.width)}
       >
         {props.text.slice(0, props.caretIndex)}
@@ -55,7 +56,7 @@ function MagicSegments(props: { text: string; caretIndex: number; caretX: number
                   "rounded-(--radius-sm) outline-1 outline-dashed outline-muted-foreground/40 outline-offset-2",
               )}
             >
-              <Text class="text-sm text-transparent">{segment().text}</Text>
+              <Text class={cn(typography.body(), "text-transparent")}>{segment().text}</Text>
             </View>
           )}
         </Each>

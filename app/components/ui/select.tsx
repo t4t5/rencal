@@ -4,20 +4,22 @@ import { Select as BaseSelect, type SelectEntry, type SelectProps } from "nsh/ba
 import { cn } from "@/lib/utils"
 
 import { CheckIcon, ChevronDownIcon } from "@/icons"
+import { controlSurface, typography } from "@/themes"
 
 import { POPUP_SURFACE } from "./popover"
 
 export const LIST_ROW =
   "group rounded-(--radius-sm) focus:bg-accent focus:text-accent-foreground disabled:opacity-50"
 export const SELECT_POPUP = cn(POPUP_SURFACE, "max-h-80 p-1")
-export const SELECT_GROUP = "px-2 pb-1 pt-2 text-xs text-muted-foreground"
+export const selectGroupClass = () =>
+  cn(typography.caption(), "px-2 pb-1 pt-2 text-muted-foreground")
 
 /** A row with the check at its end; pass `leading` for a dot or icon before the title. */
 export function SelectRow(props: { item: SelectEntry; leading?: JSX.Element }) {
   return (
     <View class="flex-row items-center gap-2 py-1.5 pl-2 pr-2">
       {props.leading}
-      <Text class="flex-1 truncate text-sm">{props.item.title}</Text>
+      <Text class={cn(typography.body(), "flex-1 truncate")}>{props.item.title}</Text>
       <CheckIcon class="size-4 opacity-0 group-selected:opacity-100" />
     </View>
   )
@@ -36,6 +38,7 @@ export function SelectTrigger(props: {
         "group h-(--control-height) flex-row items-center justify-between gap-2 rounded-(--radius-md) border px-2",
         "border-transparent hover:border-input aria-expanded:border-transparent aria-expanded:bg-secondary focus-visible:bg-secondary disabled:opacity-50",
         props.variant === "default" && "border-border",
+        controlSurface(),
         props.class,
       )}
     >
@@ -43,7 +46,7 @@ export function SelectTrigger(props: {
       <ChevronDownIcon
         class={cn(
           "size-3 shrink-0 opacity-0 group-hover:opacity-100 group-aria-expanded:opacity-100",
-          props.variant === "default" && "opacity-100",
+          (props.variant === "default" || controlSurface()) && "opacity-100",
         )}
         color={token("muted-foreground")}
       />
@@ -90,9 +93,10 @@ export function Select(props: Props) {
       onChange={({ value }) => own.onChange?.(value)}
       popupClass={cn(SELECT_POPUP, own.popupClass)}
       itemClass={cn(LIST_ROW, own.itemClass)}
-      groupClass={cn(SELECT_GROUP, own.groupClass)}
+      groupClass={cn(selectGroupClass(), own.groupClass)}
       searchClass={cn(
-        "mx-1 mb-1 rounded-(--radius-sm) border border-input px-2 py-1.5 text-sm text-foreground placeholder:text-placeholder-foreground",
+        typography.body(),
+        "mx-1 mb-1 rounded-(--radius-sm) border border-input px-2 py-1.5 text-foreground placeholder:text-placeholder-foreground",
         own.searchClass,
       )}
       renderItem={
@@ -102,7 +106,9 @@ export function Select(props: Props) {
         own.trigger ?? (
           <SelectTrigger variant={own.variant} class={own.triggerClass}>
             {own.label ?? (
-              <Text class={cn("truncate text-sm", !title() && "text-placeholder-foreground")}>
+              <Text
+                class={cn(typography.body(), "truncate", !title() && "text-placeholder-foreground")}
+              >
                 {title() ?? own.placeholder ?? ""}
               </Text>
             )}

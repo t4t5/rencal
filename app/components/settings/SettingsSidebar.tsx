@@ -24,6 +24,7 @@ import {
   UserIcon,
 } from "@/icons"
 import { setSettingsTab, settingsTab } from "@/stores/view"
+import { typography } from "@/themes"
 
 type NavItem = {
   tab: string
@@ -69,7 +70,8 @@ export function SettingsSidebar(props: { topInset: number }) {
                 })}
                 <Text
                   class={cn(
-                    "flex-1 text-sm",
+                    typography.body(),
+                    "flex-1",
                     active() ? "text-secondary-foreground" : "text-muted-foreground",
                   )}
                 >
@@ -80,7 +82,9 @@ export function SettingsSidebar(props: { topInset: number }) {
                     accessibilityLabel={`${updates()} plugin ${updates() === 1 ? "update" : "updates"} available`}
                     class="h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1"
                   >
-                    <Text class="text-xs font-medium text-brand-foreground">{updates()}</Text>
+                    <Text class={cn(typography.caption(), "font-medium text-brand-foreground")}>
+                      {updates()}
+                    </Text>
                   </View>
                 </If>
               </BaseButton>

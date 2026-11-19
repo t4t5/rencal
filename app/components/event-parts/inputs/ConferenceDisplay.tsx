@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import { GoogleMeetIcon, VideoIcon } from "@/icons"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { RemoveItemButton } from "./RemoveItemButton"
 
@@ -24,11 +24,9 @@ function ConferenceLink(props: { url: string; label: string }) {
     <View class="gap-1 py-1">
       <Button class="w-full" onPress={() => void openUrl(props.url)}>
         <VideoIcon color={token("primary-foreground")} />
-        <Text class={cn("font-mono text-sm font-medium text-primary-foreground", displayCase())}>
-          Join {props.label}
-        </Text>
+        <Text class={cn(typography.button(), "text-primary-foreground")}>Join {props.label}</Text>
       </Button>
-      <Text class="truncate text-xs text-muted-foreground">{props.url}</Text>
+      <Text class={cn(typography.caption(), "truncate text-muted-foreground")}>{props.url}</Text>
     </View>
   )
 }
@@ -46,7 +44,9 @@ function ConferenceItem(props: {
         </If>
       </ItemMedia>
       <ItemContent>
-        <Text class="truncate text-sm text-foreground">{conferenceLabel[props.provider]}</Text>
+        <Text class={cn(typography.body(), "truncate text-foreground")}>
+          {conferenceLabel[props.provider]}
+        </Text>
       </ItemContent>
       <If when={!props.readonly && props.onRemove}>
         <RemoveItemButton onPress={props.onRemove} />
@@ -102,7 +102,9 @@ export function ConferenceDisplay(props: {
               <VideoIcon color={token("muted-foreground")} />
             </ItemMedia>
             <ItemContent>
-              <Text class="text-sm text-muted-foreground">Add {conferenceLabel[provider()]}</Text>
+              <Text class={cn(typography.body(), "text-muted-foreground")}>
+                Add {conferenceLabel[provider()]}
+              </Text>
             </ItemContent>
           </BaseButton>
         )}

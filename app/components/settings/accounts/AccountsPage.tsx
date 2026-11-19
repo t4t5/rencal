@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils"
 
 import { CalendarIcon, PlusIcon } from "@/icons"
 import { calendars, reloadCalendars } from "@/stores/calendar"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { AddAccountModal } from "./AddAccountModal"
 import { ProviderIcon } from "./ProviderIcon"
@@ -83,7 +83,9 @@ export function AccountsPage() {
           when={accounts().length > 0}
           else={
             <SettingsItem class="py-3">
-              <Text class="text-sm text-muted-foreground">No accounts connected yet.</Text>
+              <Text class={cn(typography.body(), "text-muted-foreground")}>
+                No accounts connected yet.
+              </Text>
             </SettingsItem>
           }
         >
@@ -105,9 +107,7 @@ export function AccountsPage() {
 
       <Button class="self-start" onPress={() => showAddAccount.set(true)}>
         <PlusIcon class="size-4" color={token("primary-foreground")} />
-        <Text class={cn("font-mono text-sm font-medium text-primary-foreground", displayCase())}>
-          Connect new account
-        </Text>
+        <Text class={cn(typography.button(), "text-primary-foreground")}>Connect new account</Text>
       </Button>
 
       <If when={showAddAccount()}>
@@ -178,7 +178,7 @@ function Account(props: {
       </View>
 
       <View class="min-w-0 flex-1 gap-0.5">
-        <Text class={cn("font-mono text-sm", displayCase())}>
+        <Text class={cn(typography.section())}>
           {getProviderDisplayName(props.provider, props.info)}
         </Text>
         <View class="flex-row items-center gap-1">
@@ -187,7 +187,9 @@ function Account(props: {
             accessibilityLabel={STATUS_LABELS[status()]}
             tooltip={<Tooltip label={STATUS_LABELS[status()]} />}
           />
-          <Text class="truncate text-xs text-muted-foreground">{props.account}</Text>
+          <Text class={cn(typography.caption(), "truncate text-muted-foreground")}>
+            {props.account}
+          </Text>
         </View>
       </View>
 

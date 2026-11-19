@@ -4,6 +4,7 @@ import { Tooltip as BaseTooltip } from "nsh/base"
 import { Button } from "@/components/ui/button"
 
 import type { SyncFailure, SyncPreview } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
 import { CloudCheckIcon, CloudIcon, CloudOffIcon, CloudWarningIcon, SyncIcon } from "@/icons"
 import { calendarOf } from "@/stores/calendar"
@@ -16,6 +17,7 @@ import {
   syncNow,
   syncStatus,
 } from "@/stores/sync"
+import { typography } from "@/themes"
 
 type Shown = "offline" | "error" | "syncing" | "checking" | "pending" | "synced"
 
@@ -38,10 +40,12 @@ const changesOf = (preview: SyncPreview) =>
 function ChangesPreview() {
   return (
     <View class="gap-1">
-      <Text class="text-xs font-medium text-tooltip-foreground">Click to sync</Text>
+      <Text class={cn(typography.caption(), "font-medium text-tooltip-foreground")}>
+        Click to sync
+      </Text>
       <Each of={pendingPreviews()} key={(preview) => preview.calendar_slug}>
         {(preview) => (
-          <Text class="text-xs text-muted-foreground">
+          <Text class={cn(typography.caption(), "text-muted-foreground")}>
             {calendarName(preview().calendar_slug)}: {changesOf(preview())}
           </Text>
         )}
@@ -60,7 +64,11 @@ function SyncFailures() {
     <View class="gap-1">
       <If when={syncError() !== null}>{hintText(syncError())}</If>
       <Each of={syncFailures()} key="index">
-        {(failure) => <Text class="text-xs text-tooltip-foreground">{failureText(failure())}</Text>}
+        {(failure) => (
+          <Text class={cn(typography.caption(), "text-tooltip-foreground")}>
+            {failureText(failure())}
+          </Text>
+        )}
       </Each>
     </View>
   )
@@ -79,7 +87,7 @@ function Hint(props: { children?: JSX.Element }) {
 }
 
 const hintText = (text: string | null) => (
-  <Text class="text-xs text-tooltip-foreground">{text}</Text>
+  <Text class={cn(typography.caption(), "text-tooltip-foreground")}>{text}</Text>
 )
 
 export function SyncStatus() {
@@ -138,7 +146,9 @@ export function SyncStatus() {
         </If>
         <If when={pendingCount() > 0 && !autoSyncEnabled()}>
           <View class="absolute -right-0.5 -top-0.5 h-[14px] min-w-[14px] items-center justify-center rounded-full bg-primary px-[3px]">
-            <Text class="text-2xs font-medium text-primary-foreground">{pendingCount()}</Text>
+            <Text class={cn(typography.micro(), "font-medium text-primary-foreground")}>
+              {pendingCount()}
+            </Text>
           </View>
         </If>
       </Button>

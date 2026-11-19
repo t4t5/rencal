@@ -26,9 +26,6 @@
   },
   "theme": "theme.json",
   "tailwind": {
-    "fontSize": {
-      "2xs": [11, 1.27]
-    },
     "breakpoints": {
       "xs": 380
     }

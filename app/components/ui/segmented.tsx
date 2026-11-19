@@ -3,7 +3,7 @@ import { Tab, Tabs } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 /** A choice of a few values side by side, the chosen one on a pill that slides to it. */
 export function Segmented<T extends string>(props: {
@@ -26,8 +26,8 @@ export function Segmented<T extends string>(props: {
           >
             <Text
               class={cn(
-                "font-mono text-xs text-muted-foreground group-selected:text-selected-foreground",
-                displayCase(),
+                typography.buttonSm(),
+                "text-muted-foreground group-selected:text-selected-foreground",
               )}
             >
               {item().title}

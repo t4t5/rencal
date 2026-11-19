@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils"
 
 import { calendars } from "@/stores/calendar"
 import { defaultCalendar, timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 
 import {
   eventsLabel,
@@ -73,7 +74,9 @@ export function IcsImportDialog(props: {
             </DialogHeader>
             <If
               when={loadError()}
-              else={<Text class="text-sm text-muted-foreground">Reading file…</Text>}
+              else={
+                <Text class={cn(typography.body(), "text-muted-foreground")}>Reading file…</Text>
+              }
             >
               <ErrorText message={loadError()} />
             </If>
@@ -177,8 +180,8 @@ function IcsImportForm(props: {
             <View class="min-w-0 gap-1.5">
               <If when={!single()}>
                 <View class="min-w-0 flex-row items-baseline justify-between gap-3">
-                  <Text class="truncate text-sm font-medium">{source().name}</Text>
-                  <Text class="shrink-0 text-sm text-muted-foreground">
+                  <Text class={cn(typography.body(), "truncate font-medium")}>{source().name}</Text>
+                  <Text class={cn(typography.body(), "shrink-0 text-muted-foreground")}>
                     {sourceSummary(source())}
                   </Text>
                 </View>
@@ -200,13 +203,13 @@ function IcsImportForm(props: {
         </Each>
 
         <If when={props.preview.skipped_count > 0}>
-          <Text class="text-sm text-muted-foreground">
+          <Text class={cn(typography.body(), "text-muted-foreground")}>
             {eventsLabel(props.preview.skipped_count)} in this file couldn’t be read and will be
             left out.
           </Text>
         </If>
         <If when={dropsGuests()}>
-          <Text class="text-sm text-muted-foreground">
+          <Text class={cn(typography.body(), "text-muted-foreground")}>
             Guests aren’t copied into synced calendars, so nobody gets an invitation email.
           </Text>
         </If>
@@ -233,12 +236,14 @@ function IcsImportForm(props: {
 function EventSummary(props: { event: CalendarEvent }) {
   return (
     <View class="min-w-0 gap-0.5">
-      <Text class="text-sm font-medium">{props.event.summary || "Untitled event"}</Text>
-      <Text class="text-sm text-muted-foreground">
+      <Text class={cn(typography.body(), "font-medium")}>
+        {props.event.summary || "Untitled event"}
+      </Text>
+      <Text class={cn(typography.body(), "text-muted-foreground")}>
         {eventWhen(props.event.start, props.event.end, timeFormat())}
       </Text>
       <If when={props.event.location}>
-        <Text class="text-sm text-muted-foreground">{props.event.location}</Text>
+        <Text class={cn(typography.body(), "text-muted-foreground")}>{props.event.location}</Text>
       </If>
     </View>
   )
@@ -274,7 +279,7 @@ function DestinationSelect(props: {
       label={
         <View class="min-w-0 flex-1 flex-row items-center gap-2">
           <Swatch color={colorOf(props.value)} />
-          <Text class="truncate text-sm text-foreground">
+          <Text class={cn(typography.body(), "truncate text-foreground")}>
             {items().find((item) => item.value === props.value)?.title ?? props.value}
           </Text>
         </View>

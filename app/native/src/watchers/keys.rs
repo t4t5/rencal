@@ -4,9 +4,9 @@
 use std::ffi::OsStr;
 use std::path::Path;
 
+use crate::host::AppHandle;
 use notify::RecursiveMode;
 use rencal_config::RencalConfig;
-use crate::host::AppHandle;
 
 use crate::events::AppEvent;
 use crate::fs_watch::{file_watch_dirs, is_any_change, watch_debounced};

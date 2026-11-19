@@ -7,7 +7,7 @@ import { api, getErrorMessage } from "@/lib/api"
 import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
 
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { PluginPreview } from "./PluginPreview"
 import { pluginOwner, type PluginListItem } from "./plugin-list"
@@ -46,8 +46,10 @@ export type PluginActionState = ReturnType<typeof createPluginAction>
 function DetailRow(props: { label: string; value: string }) {
   return (
     <View class="flex-row gap-6">
-      <Text class="w-20 shrink-0 text-sm text-muted-foreground">{props.label}</Text>
-      <Text class="min-w-0 flex-1 text-sm">{props.value}</Text>
+      <Text class={cn(typography.body(), "w-20 shrink-0 text-muted-foreground")}>
+        {props.label}
+      </Text>
+      <Text class={cn(typography.body(), "min-w-0 flex-1")}>{props.value}</Text>
     </View>
   )
 }
@@ -114,12 +116,12 @@ export function PluginDetails(props: { plugin: PluginListItem; state: PluginActi
           </If>
         </View>
         <If when={!props.plugin.listed}>
-          <Text class="text-xs text-muted-foreground">
+          <Text class={cn(typography.caption(), "text-muted-foreground")}>
             This plugin isn't listed in the renCal catalog.
           </Text>
         </If>
         <If when={hasView()}>
-          <Text class="text-xs text-muted-foreground">
+          <Text class={cn(typography.caption(), "text-muted-foreground")}>
             Its view is a React module, so it needs a build for this version of renCal to show up.
           </Text>
         </If>
@@ -130,7 +132,7 @@ export function PluginDetails(props: { plugin: PluginListItem; state: PluginActi
         {(url) => <PluginPreview url={url()} name={props.plugin.name} />}
       </If>
       <View class="gap-3 border-t border-border pt-6">
-        <Text class={cn("font-mono text-sm", displayCase())}>Details</Text>
+        <Text class={cn(typography.section())}>Details</Text>
         <View class="gap-2">
           <DetailRow label="Author" value={pluginOwner(props.plugin)} />
           <If when={props.plugin.repo}>

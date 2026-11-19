@@ -2,6 +2,8 @@ import { type JSX, Text, View } from "nsh"
 
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 export function KbdGroup(props: { class?: string; children?: JSX.Element }) {
   return <View class={cn("flex-row items-center gap-1", props.class)}>{props.children}</View>
 }
@@ -16,7 +18,9 @@ export function Kbd(props: { label?: string; class?: string; children?: JSX.Elem
       )}
     >
       <If when={props.label}>
-        <Text class="text-xs font-medium text-muted-foreground">{props.label}</Text>
+        <Text class={cn(typography.caption(), "font-medium text-muted-foreground")}>
+          {props.label}
+        </Text>
       </If>
       {props.children}
     </View>

@@ -5,10 +5,12 @@ import { Menu, MenuItem, MenuSeparator } from "@/components/ui/menu"
 import { Tooltip } from "@/components/ui/tooltip"
 
 import { MAX_EXTRA_TIME_ZONES, nowZoned, timeZoneCity } from "@/lib/event-time"
+import { cn } from "@/lib/utils"
 
 import { CloseIcon, GlobeIcon, PlusIcon } from "@/icons"
 import { viewerTzid } from "@/stores/clock"
 import { setExtraTimeZones, storedTimeZones } from "@/stores/settings"
+import { typography } from "@/themes"
 
 const PICKER_POPUP = "w-80"
 
@@ -82,13 +84,15 @@ export function TimeZoneMenu(props: { tzid: string; children: JSX.Element }) {
       >
         <MenuItem onSelect={() => (pickNext = "change")}>
           <GlobeIcon class="size-4" />
-          <Text class="text-sm">Change time zone</Text>
-          <Text class="ml-auto pl-4 text-sm text-muted-foreground">{timeZoneCity(props.tzid)}</Text>
+          <Text class={typography.body()}>Change time zone</Text>
+          <Text class={cn(typography.body(), "ml-auto pl-4 text-muted-foreground")}>
+            {timeZoneCity(props.tzid)}
+          </Text>
         </MenuItem>
         <If when={hasRoom()}>
           <MenuItem onSelect={() => (pickNext = "add")}>
             <PlusIcon class="size-4" />
-            <Text class="text-sm">Add time zone</Text>
+            <Text class={typography.body()}>Add time zone</Text>
           </MenuItem>
         </If>
         <MenuSeparator />
@@ -98,7 +102,7 @@ export function TimeZoneMenu(props: { tzid: string; children: JSX.Element }) {
           }
         >
           <CloseIcon class="size-4" color={token("destructive")} />
-          <Text class="text-sm text-destructive">Remove time zone from list</Text>
+          <Text class={cn(typography.body(), "text-destructive")}>Remove time zone from list</Text>
         </MenuItem>
       </Menu>
       {/* The list's anchor: the menu's trigger is the menu's. */}
@@ -130,13 +134,17 @@ export function ZoneName(props: { tzid: string; name: string; local: boolean }) 
       else={
         <TimeZoneMenu tzid={props.tzid}>
           <View class="rounded-(--radius-sm) px-1 py-1 hover:bg-accent aria-expanded:bg-accent">
-            <Text class="font-mono text-2xs leading-none text-muted-foreground">{props.name}</Text>
+            <Text class={cn(typography.numericalSm(), "leading-none text-muted-foreground")}>
+              {props.name}
+            </Text>
           </View>
         </TimeZoneMenu>
       }
     >
       <View class="px-1">
-        <Text class="font-mono text-2xs leading-none text-muted-foreground">{props.name}</Text>
+        <Text class={cn(typography.numericalSm(), "leading-none text-muted-foreground")}>
+          {props.name}
+        </Text>
       </View>
     </If>
   )

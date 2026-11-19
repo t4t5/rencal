@@ -1,11 +1,11 @@
 use crate::events::AppEvent;
+use crate::host::AppHandle;
 use crate::plugins::normalize_repository;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::collections::VecDeque;
 use std::path::Path;
-use crate::host::AppHandle;
 use url::Url;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Type)]
@@ -180,11 +180,7 @@ where
 /// Validate and enqueue URLs, waking the frontend when any were accepted. The
 /// emitted event is only a wake-up signal; the inbox remains authoritative and
 /// is drained over RPC.
-pub fn enqueue_urls(
-    app: &AppHandle,
-    inbox: &DeepLinkInbox,
-    urls: &[String],
-) -> usize {
+pub fn enqueue_urls(app: &AppHandle, inbox: &DeepLinkInbox, urls: &[String]) -> usize {
     let accepted = inbox.enqueue(urls);
     if accepted.events > 0 {
         let _ = AppEvent::EventDeepLinkAvailable(()).emit(app);

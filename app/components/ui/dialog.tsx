@@ -4,7 +4,7 @@ import { Button as BaseButton, Dialog as BaseDialog } from "nsh/base"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 /** A centered modal: pressing the backdrop or Escape closes it. */
 export function Dialog(props: {
@@ -49,12 +49,16 @@ export function DialogFooter(props: { class?: string; children?: JSX.Element }) 
 
 export function DialogTitle(props: { class?: string; children?: JSX.Element }) {
   return (
-    <Text class={cn("font-mono text-center text-base font-semibold", displayCase(), props.class)}>
+    <Text class={cn(typography.title(), "text-center font-semibold", props.class)}>
       {props.children}
     </Text>
   )
 }
 
 export function DialogDescription(props: { class?: string; children?: JSX.Element }) {
-  return <Text class={cn("text-sm text-muted-foreground", props.class)}>{props.children}</Text>
+  return (
+    <Text class={cn(typography.body(), "text-muted-foreground", props.class)}>
+      {props.children}
+    </Text>
+  )
 }

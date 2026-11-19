@@ -12,7 +12,7 @@ import { activeDate, navigateToDate } from "@/stores/calendar"
 import { currentDay } from "@/stores/clock"
 import { calendarEvents, holdRange } from "@/stores/events"
 import { firstDayOfWeek } from "@/stores/settings"
-import { displayCase, displayWeight } from "@/themes"
+import { typography } from "@/themes"
 import { paintOf } from "@/views/event-block"
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -70,7 +70,7 @@ function YearDay(props: { date: () => Temporal.PlainDate; dots: () => CalendarEv
       >
         <Text
           class={cn(
-            "font-mono text-xs",
+            typography.numerical(),
             isToday() && "text-today-foreground",
             selected() && !isToday() && "text-selected-foreground",
           )}
@@ -107,7 +107,9 @@ function YearMonth(props: {
 
   return (
     <View class="flex-1 gap-1 min-w-0">
-      <Text class="self-start px-1 text-sm font-medium">{formatMonth(start(), "long")}</Text>
+      <Text class={cn(typography.body(), "self-start px-1 font-medium")}>
+        {formatMonth(start(), "long")}
+      </Text>
       <View>
         <View class="flex-row">
           <Each of={COLUMNS}>
@@ -118,9 +120,7 @@ function YearMonth(props: {
                   isWeekend(dateAt(0, column())) && "bg-weekend",
                 )}
               >
-                <Text
-                  class={cn("font-mono text-2xs font-medium text-muted-foreground", displayCase())}
-                >
+                <Text class={cn(typography.numericalSm(), "font-medium text-muted-foreground")}>
                   {WEEKDAY_LETTERS[firstDayOfWeek()][column()]}
                 </Text>
               </View>
@@ -176,7 +176,7 @@ export function YearView() {
   return (
     <View class="flex-1 min-h-0">
       <View class="flex-row items-center justify-between shrink-0 px-(--layout-padding) pb-2">
-        <Text class={cn("font-mono text-2xl", displayCase(), displayWeight())}>{year()}</Text>
+        <Text class={cn(typography.display())}>{year()}</Text>
         <View class="flex-row items-center gap-1">
           <Button
             variant="ghost"

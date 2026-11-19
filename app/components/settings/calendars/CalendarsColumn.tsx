@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils"
 import { CalendarIcon, ChevronDownIcon, PlusIcon, RssIcon } from "@/icons"
 import { calendars, reloadCalendars } from "@/stores/calendar"
 import { defaultCalendar, groups, setDefaultCalendar, setGroups } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { AddSubscriptionModal } from "./AddSubscriptionModal"
 import { ChangeCalendarColorModal } from "./ChangeCalendarColorModal"
@@ -97,7 +97,7 @@ export function CalendarsColumn(props: { selectedGroup: string }) {
         else={
           <SettingsSection title="Calendars">
             <SettingsItem class="py-3">
-              <Text class="text-sm text-muted-foreground">No calendars yet.</Text>
+              <Text class={cn(typography.body(), "text-muted-foreground")}>No calendars yet.</Text>
             </SettingsItem>
           </SettingsSection>
         }
@@ -124,26 +124,22 @@ export function CalendarsColumn(props: { selectedGroup: string }) {
         trigger={
           <View class="h-(--control-height) shrink-0 flex-row items-center gap-2 self-start rounded-(--radius-md) border border-button-border bg-secondary px-3 hover:bg-secondary-hover">
             <PlusIcon class="size-4" />
-            <Text
-              class={cn("font-mono text-sm font-medium text-secondary-foreground", displayCase())}
-            >
-              Add calendar
-            </Text>
+            <Text class={cn(typography.button(), "text-secondary-foreground")}>Add calendar</Text>
             <ChevronDownIcon class="size-4" color={token("muted-foreground")} />
           </View>
         }
       >
         <MenuItem onSelect={() => showNewCalendar.set(true)}>
           <PlusIcon class="size-4" />
-          <Text class="text-sm">New calendar</Text>
+          <Text class={typography.body()}>New calendar</Text>
         </MenuItem>
         <MenuItem onSelect={() => showAddSubscription.set(true)}>
           <RssIcon class="size-4" />
-          <Text class="text-sm">Add subscription</Text>
+          <Text class={typography.body()}>Add subscription</Text>
         </MenuItem>
         <MenuItem onSelect={() => void pickIcsFile().catch(importFailed)}>
           <CalendarIcon class="size-4" />
-          <Text class="text-sm">Import .ics file</Text>
+          <Text class={typography.body()}>Import .ics file</Text>
         </MenuItem>
       </Menu>
 
@@ -186,11 +182,13 @@ function CalendarRow(props: {
         color={eventPaint(props.calendar.color).color}
         onChange={props.onCheckedChange}
       >
-        <Text class="truncate text-sm">{props.calendar.name || props.calendar.slug}</Text>
+        <Text class={cn(typography.body(), "truncate")}>
+          {props.calendar.name || props.calendar.slug}
+        </Text>
       </Checkbox>
 
       <If when={isDefault()}>
-        <Text class="text-sm text-muted-foreground">Default</Text>
+        <Text class={cn(typography.body(), "text-muted-foreground")}>Default</Text>
       </If>
 
       <MoreMenu>

@@ -10,6 +10,7 @@ import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon, RepeatIcon } from "@/icons"
+import { typography } from "@/themes"
 
 import { CustomRecurrenceModal } from "./CustomRecurrenceModal"
 
@@ -67,7 +68,8 @@ export function RepeatSelect(props: {
             <ItemContent>
               <Text
                 class={cn(
-                  "truncate text-sm",
+                  typography.body(),
+                  "truncate",
                   props.value ? "text-foreground" : "text-placeholder-foreground",
                 )}
               >
@@ -81,7 +83,7 @@ export function RepeatSelect(props: {
           {(option) => (
             <MenuItem onSelect={() => choose(option().value)}>
               <ItemContent>
-                <Text class="text-sm text-foreground">{option().label}</Text>
+                <Text class={cn(typography.body(), "text-foreground")}>{option().label}</Text>
               </ItemContent>
               <CheckIcon class={cn(selected() !== option().value && "opacity-0")} />
             </MenuItem>

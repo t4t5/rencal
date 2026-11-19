@@ -7,6 +7,8 @@ import { StatusDot } from "@/components/ui/status-dot"
 import type { ResponseStatus } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 const OPTIONS: { value: ResponseStatus; title: string }[] = [
   { value: "accepted", title: "Accepted" },
   { value: "declined", title: "Declined" },
@@ -35,7 +37,8 @@ export function RsvpSelect(props: {
           <ItemContent>
             <Text
               class={cn(
-                "truncate text-sm",
+                typography.body(),
+                "truncate",
                 selected() ? "text-foreground" : "text-placeholder-foreground",
               )}
             >

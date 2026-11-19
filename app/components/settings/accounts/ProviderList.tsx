@@ -12,7 +12,7 @@ import {
 } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { ProviderIcon } from "./ProviderIcon"
 import {
@@ -55,9 +55,7 @@ export function ProviderList(props: { onClose: () => void; onSetStep: (step: Mod
             <If when={slug() !== "caldav"}>
               <ProviderIcon slug={slug()} info={findProvider(providers(), slug())} class="size-4" />
             </If>
-            <Text
-              class={cn("font-mono text-sm font-medium text-secondary-foreground", displayCase())}
-            >
+            <Text class={cn(typography.button(), "text-secondary-foreground")}>
               {slug() === "caldav"
                 ? "Other CalDAV server"
                 : getProviderDisplayName(slug(), findProvider(providers(), slug()))}

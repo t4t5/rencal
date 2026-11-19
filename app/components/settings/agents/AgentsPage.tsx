@@ -11,6 +11,9 @@ import { Switch } from "@/components/ui/switch"
 
 import { api, getErrorMessage, type Skill, type SkillsStatus } from "@/lib/api"
 import { logger } from "@/lib/logger"
+import { cn } from "@/lib/utils"
+
+import { typography } from "@/themes"
 
 type SkillState = SkillsStatus["skills"][number]
 
@@ -60,7 +63,7 @@ export function AgentsPage() {
           when={current().supported}
           else={
             <SettingsContent>
-              <Text class="w-[400px] text-sm text-muted-foreground">
+              <Text class={cn(typography.body(), "w-[400px] text-muted-foreground")}>
                 Installing agent skills is supported on Linux and macOS.
               </Text>
             </SettingsContent>
@@ -137,20 +140,24 @@ function SkillRow(props: {
         <>
           <If when={!props.state.available}>
             <View class="flex-row gap-1">
-              <Text class="text-xs text-muted-foreground">Needs the caldir CLI.</Text>
+              <Text class={cn(typography.caption(), "text-muted-foreground")}>
+                Needs the caldir CLI.
+              </Text>
               <BaseButton onPress={() => void openUrl(CALDIR_INSTALL_URL)}>
-                <Text class="text-xs text-primary hover:underline">Install it</Text>
+                <Text class={cn(typography.caption(), "text-primary hover:underline")}>
+                  Install it
+                </Text>
               </BaseButton>
             </View>
           </If>
           <If when={installed() && missing().length > 0}>
             <BaseButton class="self-start" disabled={busy()} onPress={() => void run(true)}>
-              <Text class="text-xs text-primary hover:underline">
+              <Text class={cn(typography.caption(), "text-primary hover:underline")}>
                 Add to {joinNames(missing())}
               </Text>
             </BaseButton>
           </If>
-          <ErrorText message={error()} class="text-xs" />
+          <ErrorText message={error()} class={typography.caption()} />
         </>
       }
     >

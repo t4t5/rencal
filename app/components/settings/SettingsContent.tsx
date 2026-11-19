@@ -3,7 +3,7 @@ import { platform, type JSX, Scroll, Text, View } from "nsh"
 import { needsNativeDecorations } from "@/lib/api/internal"
 import { cn } from "@/lib/utils"
 
-import { displayCase, displayWeight } from "@/themes"
+import { typography } from "@/themes"
 
 /**
  * Settings draws its own close button in the top right: tiling compositors draw no title
@@ -33,15 +33,13 @@ export function SettingsSection(props: {
 }) {
   return (
     <View class={cn("gap-2", props.class)}>
-      <Text class={cn("px-1 font-mono text-sm", displayCase(), displayWeight())}>
-        {props.title}
-      </Text>
+      <Text class={cn(typography.section(), "px-1")}>{props.title}</Text>
       <View class="overflow-hidden rounded-(--radius-lg) bg-card">
         {/* Every row draws the line above it; this tucks the first row's under the card's edge. */}
         <View class="-mt-px">{props.children}</View>
       </View>
       <If when={props.footer}>
-        <Text class="px-1 text-xs text-muted-foreground">{props.footer}</Text>
+        <Text class={cn(typography.caption(), "px-1 text-muted-foreground")}>{props.footer}</Text>
       </If>
     </View>
   )
@@ -69,9 +67,9 @@ export function SettingsRow(props: {
   return (
     <SettingsItem class="items-start gap-4">
       <View class="min-h-(--control-height) min-w-0 flex-1 justify-center gap-0.5">
-        <Text class="text-sm">{props.label}</Text>
+        <Text class={typography.body()}>{props.label}</Text>
         <If when={props.description}>
-          <Text class="text-xs text-muted-foreground">{props.description}</Text>
+          <Text class={cn(typography.caption(), "text-muted-foreground")}>{props.description}</Text>
         </If>
         {props.detail}
       </View>
@@ -86,7 +84,7 @@ export function SettingsRow(props: {
 export function SettingsField(props: { label: string; class?: string; children?: JSX.Element }) {
   return (
     <View class={cn("gap-2", props.class)}>
-      <Text class="text-sm">{props.label}</Text>
+      <Text class={typography.body()}>{props.label}</Text>
       {props.children}
     </View>
   )
@@ -95,7 +93,7 @@ export function SettingsField(props: { label: string; class?: string; children?:
 export function ErrorText(props: { message: string | null | undefined; class?: string }) {
   return (
     <If when={props.message}>
-      <Text class={cn("text-sm text-destructive", props.class)}>{props.message}</Text>
+      <Text class={cn(typography.body(), "text-destructive", props.class)}>{props.message}</Text>
     </If>
   )
 }

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { ChevronLeftIcon, ChevronRightIcon } from "@/icons"
 import { currentDay } from "@/stores/clock"
 import { firstDayOfWeek, showWeekNumbers } from "@/stores/settings"
+import { typography } from "@/themes"
 
 // Indexed by day number, 0 = Sunday.
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
@@ -65,7 +66,7 @@ function Day(props: {
     >
       <Text
         class={cn(
-          "text-sm",
+          typography.body(),
           outside() ? "text-muted-foreground" : "text-foreground",
           isToday() && (selected() ? "text-today-foreground" : "text-today"),
           !isToday() && selected() && "text-selected-foreground",
@@ -135,7 +136,9 @@ function MonthCalendar(props: {
         <Each of={COLUMNS}>
           {(column) => (
             <View class="min-w-8 flex-1 items-center">
-              <Text class="text-2xs text-muted-foreground">{WEEKDAYS[weekdayIndex(column())]}</Text>
+              <Text class={cn(typography.numericalSm(), "text-muted-foreground")}>
+                {WEEKDAYS[weekdayIndex(column())]}
+              </Text>
             </View>
           )}
         </Each>
@@ -147,7 +150,7 @@ function MonthCalendar(props: {
             <View class="flex-row">
               <If when={showWeekNumbers()}>
                 <View class="w-8 items-center justify-center">
-                  <Text class="text-2xs text-muted-foreground">
+                  <Text class={cn(typography.numericalSm(), "text-muted-foreground")}>
                     {isoWeekNumber(plainDateFromEpochDay(firstDay()), firstDayOfWeek())}
                   </Text>
                 </View>
@@ -195,7 +198,9 @@ export function DatePicker(props: {
           )}
         >
           {props.addon}
-          <Text class="text-sm text-foreground">{formatShortDate(props.date)}</Text>
+          <Text class={cn(typography.body(), "text-foreground")}>
+            {formatShortDate(props.date)}
+          </Text>
         </View>
       }
     >

@@ -18,6 +18,7 @@ import {
 import { dateInViewerZone, formatLongDate } from "@/lib/event-time"
 import type { Binding } from "@/lib/key-bindings"
 import { parseEventText } from "@/lib/magic-parser"
+import { cn } from "@/lib/utils"
 
 import { CheckIcon, ChevronRightIcon } from "@/icons"
 import {
@@ -31,6 +32,7 @@ import {
   setPaletteOpen,
   setPalettePage,
 } from "@/stores/commands"
+import { typography } from "@/themes"
 
 import { ArrowKey, ShortcutKeys } from "./ShortcutKeys"
 
@@ -88,15 +90,15 @@ function PaletteFooter(props: { escAction: string }) {
           <ArrowKey direction="up" />
           <ArrowKey direction="down" />
         </KbdGroup>
-        <Text class="text-xs text-muted-foreground">navigate</Text>
+        <Text class={cn(typography.caption(), "text-muted-foreground")}>navigate</Text>
       </View>
       <View class="flex-row items-center gap-1.5">
         <Kbd label="Enter" />
-        <Text class="text-xs text-muted-foreground">select</Text>
+        <Text class={cn(typography.caption(), "text-muted-foreground")}>select</Text>
       </View>
       <View class="flex-row items-center gap-1.5">
         <Kbd label="Esc" />
-        <Text class="text-xs text-muted-foreground">{props.escAction}</Text>
+        <Text class={cn(typography.caption(), "text-muted-foreground")}>{props.escAction}</Text>
       </View>
     </View>
   )
@@ -110,7 +112,12 @@ function PaletteRow(props: {
 }) {
   return (
     <View class="flex-row items-center gap-2">
-      <Text class="flex-1 text-sm text-popover-foreground group-focus:text-accent-foreground line-clamp-1">
+      <Text
+        class={cn(
+          typography.body(),
+          "flex-1 text-popover-foreground group-focus:text-accent-foreground line-clamp-1",
+        )}
+      >
         {props.entry.label}
       </Text>
       <If when={props.prompt}>
@@ -250,7 +257,11 @@ export function CommandPalette() {
             check={!!entry.checked}
           />
         )}
-        empty={<Text class="px-3 py-6 text-center text-sm text-muted-foreground">{empty()}</Text>}
+        empty={
+          <Text class={cn(typography.body(), "px-3 py-6 text-center text-muted-foreground")}>
+            {empty()}
+          </Text>
+        }
         footer={<PaletteFooter escAction={palettePage() === "root" ? "close" : "back"} />}
       />
     </Dialog>

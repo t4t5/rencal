@@ -3,13 +3,16 @@ import { computed, type JSX, Text, View } from "nsh"
 import { Select } from "@/components/ui/select"
 
 import { type EventTime, listTimeZones, timeZoneCity, timeZoneOffsetLabel } from "@/lib/event-time"
+import { cn } from "@/lib/utils"
+
+import { typography } from "@/themes"
 
 /** "GMT+1 Stockholm", the offset set back from the city. */
 export function TimeZoneLabel(props: { offset: string; city: string }) {
   return (
     <View class="min-w-0 flex-row items-baseline gap-1.5">
-      <Text class="shrink-0 text-sm text-muted-foreground">{props.offset}</Text>
-      <Text class="truncate text-sm text-foreground">{props.city}</Text>
+      <Text class={cn(typography.body(), "shrink-0 text-muted-foreground")}>{props.offset}</Text>
+      <Text class={cn(typography.body(), "truncate text-foreground")}>{props.city}</Text>
     </View>
   )
 }
@@ -72,7 +75,9 @@ export function TimeZonePicker(props: {
       searchAccessibilityLabel="Search timezones"
       accessibilityLabel={props.accessibilityLabel ?? "Time zone"}
       empty={
-        <Text class="px-2 py-6 text-center text-sm text-muted-foreground">No timezones found.</Text>
+        <Text class={cn(typography.body(), "px-2 py-6 text-center text-muted-foreground")}>
+          No timezones found.
+        </Text>
       }
       onOpenChange={(event) => props.onOpenChange(event.open)}
       onChange={(zone) => zone && zone !== props.value && props.onSelect(zone)}

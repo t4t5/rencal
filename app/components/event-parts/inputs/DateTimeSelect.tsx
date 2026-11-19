@@ -29,6 +29,7 @@ import { lastTimedRange } from "@/lib/last-timed-range"
 import { cn } from "@/lib/utils"
 
 import { ArrowRightIcon, ClockIcon, UndoIcon } from "@/icons"
+import { typography } from "@/themes"
 
 import { TimeZoneSelect } from "./TimeZoneSelect"
 
@@ -184,7 +185,7 @@ export function DateTimeSelect(props: {
         trailing={
           <If when={canAddTimeZone()}>
             <Button variant="ghost" class="px-2" onPress={() => timeZoneRequested.set(true)}>
-              <Text class="text-sm text-muted-foreground">Add timezone</Text>
+              <Text class={cn(typography.body(), "text-muted-foreground")}>Add timezone</Text>
             </Button>
           </If>
         }

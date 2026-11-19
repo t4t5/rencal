@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+import { cn } from "@/lib/utils"
+
 import {
   availableUpdate,
   closeUpdatePrompt,
@@ -18,6 +20,7 @@ import {
   updatePhase,
   updatePromptOpen,
 } from "@/stores/update"
+import { typography } from "@/themes"
 
 /** Asks at launch whether to install a newer version. */
 export function UpdateDialog() {
@@ -34,7 +37,7 @@ export function UpdateDialog() {
           renCal v{availableUpdate()?.version} is available. Download and install it now?
         </DialogDescription>
         <If when={updateError()}>
-          <Text class="text-sm text-destructive">{updateError()}</Text>
+          <Text class={cn(typography.body(), "text-destructive")}>{updateError()}</Text>
         </If>
       </DialogHeader>
       <DialogFooter>

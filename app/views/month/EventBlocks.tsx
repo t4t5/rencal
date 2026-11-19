@@ -12,6 +12,7 @@ import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { dragRole, eventDragHandlers, selectionColor } from "@/stores/drag"
 import { timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 import {
   blockStyle,
   isDeclined,
@@ -37,11 +38,15 @@ function TimedContent(props: { event: () => CalendarEvent }) {
     <>
       <View class="w-0.5 self-stretch shrink-0" style={{ backgroundColor: paint().color }} />
       <Text
-        class={cn("text-xs flex-1 line-clamp-1", isDeclined(props.event()) && "line-through")}
+        class={cn(
+          typography.caption(),
+          "flex-1 line-clamp-1",
+          isDeclined(props.event()) && "line-through",
+        )}
         style={dragRole(props.event()) === "preview" ? { color: paint().foreground } : undefined}
       >
         <Text
-          class="font-mono text-2xs"
+          class={typography.numericalSm()}
           style={{ color: isSelected(props.event()) ? undefined : paint().tinted }}
         >
           {formatTime(props.event().start, timeFormat())}
@@ -120,7 +125,7 @@ export function AllDayBarView(props: {
       }}
     >
       <Text
-        class={cn("text-xs line-clamp-1", isDeclined(event()) && "line-through")}
+        class={cn(typography.caption(), "line-clamp-1", isDeclined(event()) && "line-through")}
         style={{ color: paint().foreground }}
       >
         {event().summary || UNTITLED}
@@ -174,7 +179,10 @@ function HiddenEventRow(props: { event: () => CalendarEvent; onOpen: () => void 
       style={spanning() ? { backgroundColor: paintOf(props.event()).fill } : undefined}
     >
       <If when={spanning()} else={<TimedContent event={props.event} />}>
-        <Text class="text-xs line-clamp-1" style={{ color: paintOf(props.event()).foreground }}>
+        <Text
+          class={cn(typography.caption(), "line-clamp-1")}
+          style={{ color: paintOf(props.event()).foreground }}
+        >
           {props.event().summary || UNTITLED}
         </Text>
       </If>
@@ -202,7 +210,12 @@ export function HiddenEvents(props: { events: () => CalendarEvent[] }) {
       margin={8}
       popupClass={cn(POPUP_SURFACE, "w-64 gap-1 p-1.5")}
       trigger={
-        <Text class="text-xs text-muted-foreground hover:text-foreground px-0.5 line-clamp-1 self-start shrink-0">
+        <Text
+          class={cn(
+            typography.caption(),
+            "text-muted-foreground hover:text-foreground px-0.5 line-clamp-1 self-start shrink-0",
+          )}
+        >
           +{props.events().length} more
         </Text>
       }
@@ -211,7 +224,9 @@ export function HiddenEvents(props: { events: () => CalendarEvent[] }) {
         {(event) => <HiddenEventRow event={event} onOpen={() => open.set(false)} />}
       </Each>
       <If when={rest() > 0}>
-        <Text class="text-2xs text-muted-foreground px-1.5">and {rest()} more</Text>
+        <Text class={cn(typography.micro(), "text-muted-foreground px-1.5")}>
+          and {rest()} more
+        </Text>
       </If>
     </HoverCard>
   )

@@ -19,7 +19,10 @@ struct LogNotifier;
 #[cfg(target_os = "windows")]
 impl Notifier for LogNotifier {
     fn notify(&self, notification: &ReminderNotification, _icon: Option<&Path>) {
-        log::warn!("reminder not shown (no Windows notifier): {}", notification.title);
+        log::warn!(
+            "reminder not shown (no Windows notifier): {}",
+            notification.title
+        );
     }
 }
 

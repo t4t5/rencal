@@ -21,6 +21,7 @@ mod macos_notifications;
 mod notifications;
 mod oauth;
 mod omarchy;
+mod plugin_fonts;
 pub mod plugins;
 mod routes;
 mod signal;
@@ -29,6 +30,8 @@ pub mod state;
 mod state_bridge;
 mod tasks;
 mod time_zone;
+#[cfg(test)]
+mod typography_classes;
 mod watchers;
 
 use std::path::PathBuf;
@@ -143,8 +146,11 @@ fn load() -> Result<Arc<Router>, String> {
 
 /// The `rencal:` links and `.ics` files among a launch's arguments, as URLs.
 fn launch_urls(args: &[String], cwd: &std::path::Path) -> Vec<String> {
-    let mut urls: Vec<String> =
-        args.iter().filter(|arg| arg.starts_with("rencal:")).cloned().collect();
+    let mut urls: Vec<String> = args
+        .iter()
+        .filter(|arg| arg.starts_with("rencal:"))
+        .cloned()
+        .collect();
     urls.extend(deep_links::ics_file_urls(args, cwd));
     urls
 }
@@ -220,7 +226,10 @@ impl Backend {
         let tokens = nsh_base::tokens_of(Some(&json))?;
         let colors = tokens.colors().map(|(name, color)| {
             let color = if dark { color.dark } else { color.light };
-            (name.to_owned(), json!(format!("#{:08x}", nsh_core::Color::from(color).0)))
+            (
+                name.to_owned(),
+                json!(format!("#{:08x}", nsh_core::Color::from(color).0)),
+            )
         });
         Ok(Value::Object(colors.collect()))
     }
@@ -233,7 +242,12 @@ impl Backend {
         extensions: Vec<String>,
     ) -> Result<Option<String>, String> {
         use nsh_core::file_dialog::{FileFilter, OpenDialog};
-        let dialog = if folder { OpenDialog::folders() } else { OpenDialog::files() }.title(title);
+        let dialog = if folder {
+            OpenDialog::folders()
+        } else {
+            OpenDialog::files()
+        }
+        .title(title);
         let dialog = if extensions.is_empty() {
             dialog
         } else {
@@ -251,7 +265,6 @@ impl Backend {
             &std::fs::read_to_string("/proc/net/ipv6_route").unwrap_or_default(),
         ) || !std::path::Path::new("/proc/net/route").exists()
     }
-
 
     /// Opens what a later launch of the app was started with (NSH's single
     /// instance hands it over): its `rencal:` links and `.ics` files.
@@ -285,10 +298,15 @@ impl Backend {
 /// Whether either routing table of `/proc/net` has a default route. Loopback's
 /// IPv6 table always has an unreachable one.
 fn has_default_route(ipv4: &str, ipv6: &str) -> bool {
-    let v4 = ipv4.lines().skip(1).any(|line| line.split_whitespace().nth(1) == Some("00000000"));
+    let v4 = ipv4
+        .lines()
+        .skip(1)
+        .any(|line| line.split_whitespace().nth(1) == Some("00000000"));
     let v6 = ipv6.lines().any(|line| {
         let fields: Vec<&str> = line.split_whitespace().collect();
-        fields.first().is_some_and(|dest| dest.bytes().all(|b| b == b'0'))
+        fields
+            .first()
+            .is_some_and(|dest| dest.bytes().all(|b| b == b'0'))
             && fields.get(1) == Some(&"00")
             && fields.last() != Some(&"lo")
     });

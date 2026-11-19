@@ -11,7 +11,7 @@ import { Segmented } from "@/components/ui/segmented"
 import type { ThemeMode } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-import { themeColors, type Vars } from "@/themes"
+import { themeColors, type Vars, typography } from "@/themes"
 import {
   externalThemeErrors,
   onOmarchy,
@@ -86,7 +86,7 @@ export function ThemesPage() {
         <View class="gap-1">
           <Each of={externalThemeErrors()} key={(error) => error.package}>
             {(error) => (
-              <Text class="text-sm text-destructive">
+              <Text class={cn(typography.body(), "text-destructive")}>
                 {error().package}: {error().message}
               </Text>
             )}
@@ -153,14 +153,17 @@ function ThemeTile(props: {
       </View>
       <Text
         class={cn(
-          "truncate pt-2 text-center text-sm",
+          typography.body(),
+          "truncate pt-2 text-center",
           props.selected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
         )}
       >
         {props.theme.name}
       </Text>
       <If when={undrawnSelectors(props.theme.id) > 0}>
-        <Text class="text-center text-xs text-muted-foreground">Colors only on this build</Text>
+        <Text class={cn(typography.caption(), "text-center text-muted-foreground")}>
+          Colors only on this build
+        </Text>
       </If>
     </BaseButton>
   )

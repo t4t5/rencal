@@ -41,7 +41,10 @@ pub fn abbreviation(tz: &str, epoch_ms: f64) -> Option<String> {
 
 /// Every zone name the tz database knows.
 pub fn names() -> Vec<String> {
-    let mut names: Vec<String> = jiff::tz::db().available().map(|name| name.to_string()).collect();
+    let mut names: Vec<String> = jiff::tz::db()
+        .available()
+        .map(|name| name.to_string())
+        .collect();
     names.sort();
     names
 }
@@ -53,15 +56,27 @@ mod tests {
     #[test]
     fn offsets_follow_daylight_saving() {
         // 2026-01-15 and 2026-07-15, 12:00 UTC.
-        assert_eq!(offset_ms("Europe/Stockholm", 1768478400000.0), Some(3_600_000.0));
-        assert_eq!(offset_ms("Europe/Stockholm", 1784116800000.0), Some(7_200_000.0));
+        assert_eq!(
+            offset_ms("Europe/Stockholm", 1768478400000.0),
+            Some(3_600_000.0)
+        );
+        assert_eq!(
+            offset_ms("Europe/Stockholm", 1784116800000.0),
+            Some(7_200_000.0)
+        );
         assert_eq!(offset_ms("Not/AZone", 0.0), None);
     }
 
     #[test]
     fn abbreviations_follow_daylight_saving() {
-        assert_eq!(abbreviation("America/New_York", 1768478400000.0).as_deref(), Some("EST"));
-        assert_eq!(abbreviation("America/New_York", 1784116800000.0).as_deref(), Some("EDT"));
+        assert_eq!(
+            abbreviation("America/New_York", 1768478400000.0).as_deref(),
+            Some("EST")
+        );
+        assert_eq!(
+            abbreviation("America/New_York", 1784116800000.0).as_deref(),
+            Some("EDT")
+        );
         assert_eq!(abbreviation("Not/AZone", 0.0), None);
     }
 

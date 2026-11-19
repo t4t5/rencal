@@ -3,7 +3,7 @@ import { Button as BaseButton } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
-import { displayCase } from "@/themes"
+import { buttonSurface, typography } from "@/themes"
 
 type Variant = "default" | "secondary" | "destructive" | "outline" | "ghost" | "link"
 type Size = "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg"
@@ -43,12 +43,13 @@ export function buttonClass(variant: Variant = "default", size: Size = "default"
     "flex-row items-center justify-center gap-2 shrink-0 disabled:opacity-50 rounded-(--radius-md)",
     VARIANTS[variant],
     SIZES[size],
+    buttonSurface(),
   )
 }
 
 /** A button's label text. */
 export function buttonLabelClass(variant: Variant = "default") {
-  return cn("font-mono text-sm font-medium", displayCase(), LABELS[variant])
+  return cn(typography.button(), LABELS[variant])
 }
 
 export function Button(props: {

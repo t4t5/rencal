@@ -8,6 +8,7 @@ import { Popover } from "@/components/ui/popover"
 import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
+import { cn } from "@/lib/utils"
 
 import { calendars } from "@/stores/calendar"
 import {
@@ -18,6 +19,7 @@ import {
   upcomingInvites,
 } from "@/stores/invites"
 import { timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 
 const MD_BREAKPOINT = 768
 
@@ -48,11 +50,15 @@ export function InvitesBadge() {
             tooltip={<CommandTooltip text="Invitations" action="invites.toggle" />}
             class="size-6 items-center justify-center rounded-full bg-brand hover:bg-brand-hover"
           >
-            <Text class="text-xs font-medium text-brand-foreground">{invites().length}</Text>
+            <Text class={cn(typography.caption(), "font-medium text-brand-foreground")}>
+              {invites().length}
+            </Text>
           </BaseButton>
         }
       >
-        <Text class="border-b border-border p-3 text-sm font-medium">Invitations</Text>
+        <Text class={cn(typography.body(), "border-b border-border p-3 font-medium")}>
+          Invitations
+        </Text>
         <View class="max-h-80">
           <Each of={invites()} key={(invite) => eventKey(invite)}>
             {(invite) => <InviteCard invite={invite()} />}
@@ -77,14 +83,16 @@ function InviteCard(props: { invite: CalendarEvent }) {
     <View class="border-b border-border">
       <View class="flex-row gap-3 p-3">
         <View class="size-8 shrink-0 items-center justify-center rounded-full bg-muted-foreground">
-          <Text class="text-xs font-medium text-background">
+          <Text class={cn(typography.caption(), "font-medium text-background")}>
             {organizerName().charAt(0).toUpperCase()}
           </Text>
         </View>
         <View class="min-w-0 flex-1 gap-0.5">
-          <Text class="truncate text-sm font-medium">{props.invite.summary}</Text>
-          <Text class="truncate text-xs text-muted-foreground">From: {organizerEmail()}</Text>
-          <Text class="text-xs text-muted-foreground">{when()}</Text>
+          <Text class={cn(typography.body(), "truncate font-medium")}>{props.invite.summary}</Text>
+          <Text class={cn(typography.caption(), "truncate text-muted-foreground")}>
+            From: {organizerEmail()}
+          </Text>
+          <Text class={cn(typography.caption(), "text-muted-foreground")}>{when()}</Text>
         </View>
       </View>
       <View class="p-3">

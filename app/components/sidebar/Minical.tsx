@@ -21,7 +21,7 @@ import { activeDate, calendars, navigateToDate } from "@/stores/calendar"
 import { currentDay } from "@/stores/clock"
 import { calendarEvents } from "@/stores/events"
 import { firstDayOfWeek, showWeekNumbers } from "@/stores/settings"
-import { displayCase, displayWeight } from "@/themes"
+import { typography } from "@/themes"
 
 const WEEKS = 6
 const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
@@ -79,8 +79,8 @@ function Day(props: { day: () => number }) {
     >
       <Text
         class={cn(
-          "font-mono",
-          selected() ? "text-lg font-bold" : "text-sm",
+          typography.numericalLg(),
+          selected() && "font-bold",
           outside() ? "text-muted-foreground" : "text-foreground",
           isToday() && (selected() ? "text-today-foreground" : "text-today"),
           !isToday() && selected() && "text-selected-foreground",
@@ -103,7 +103,7 @@ function WeekNumberColumn(props: { firstDay: () => number }) {
   return (
     <If when={showWeekNumbers()}>
       <View class="w-8 items-center justify-center pt-[2px]">
-        <Text class="text-2xs text-muted-foreground">
+        <Text class={cn(typography.numericalSm(), "text-muted-foreground")}>
           {isoWeekNumber(dateAt(props.firstDay()), firstDayOfWeek())}
         </Text>
       </View>
@@ -139,7 +139,10 @@ function Weekdays() {
         {(column) => (
           <View class={cn("flex-1 items-center", isWeekendColumn(column()) && "bg-weekend")}>
             <Text
-              class={cn("text-2xs", isCurrent(column()) ? "text-today" : "text-muted-foreground")}
+              class={cn(
+                typography.numericalSm(),
+                isCurrent(column()) ? "text-today" : "text-muted-foreground",
+              )}
             >
               {WEEKDAYS[weekdayIndex(column())]}
             </Text>
@@ -156,7 +159,7 @@ export function Minical() {
   return (
     <View ref={inspectable("Minical", "components/sidebar/Minical.tsx")} class="pt-4">
       <View class="h-12 flex-row items-center justify-between px-(--layout-padding) pb-4">
-        <Text class={cn("font-mono text-2xl line-clamp-1", displayCase(), displayWeight())}>
+        <Text class={cn(typography.display(), "line-clamp-1")}>
           {formatMonth(activeDate(), "long")}{" "}
           <Text class="text-brand font-normal">{activeDate().year}</Text>
         </Text>

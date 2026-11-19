@@ -5,12 +5,12 @@ use crate::events::AppEvent;
 
 use std::path::{Path, PathBuf};
 
+use crate::host::AppHandle;
 use base64::Engine;
 use notify::RecursiveMode;
 use rencal_config::RencalConfig;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use crate::host::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
 use crate::plugins::{self, Appearance, FontStyle, MANIFEST_FILE};
@@ -366,11 +366,18 @@ fn load_fonts_from(
                 ),
             ));
         }
+        let data = crate::plugin_fonts::as_declared(&bytes, &font.family, font.weight, font.style)
+            .map_err(|error| {
+                ExternalThemeFontError::new(
+                    ExternalThemeFontErrorKind::InvalidPackage,
+                    format!("active-theme font {:?}: {error}", font.file),
+                )
+            })?;
         fonts.push(ExternalThemeFont {
             family: font.family,
             weight: font.weight,
             style: font.style,
-            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            data: base64::engine::general_purpose::STANDARD.encode(data),
         });
     }
     Ok(ExternalThemeFonts { fonts })
@@ -446,6 +453,8 @@ name = "Dusk Dark"
 css = "theme.css"
 appearance = "dark"
 "#;
+
+    const PIXEL_WOFF2: &[u8] = include_bytes!("fixtures/pixel.woff2");
 
     const FONT_MANIFEST: &str = r#"
 id = "alice.dusk"
@@ -552,7 +561,7 @@ appearance = "dark"
         let package = temp.path().join("alice.dusk");
         std::fs::create_dir_all(package.join("fonts")).unwrap();
         std::fs::write(package.join("rencal-plugin.toml"), FONT_MANIFEST).unwrap();
-        std::fs::write(package.join("fonts/pixel.woff2"), b"wOF2font").unwrap();
+        std::fs::write(package.join("fonts/pixel.woff2"), PIXEL_WOFF2).unwrap();
 
         let result = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap();
 
@@ -560,10 +569,10 @@ appearance = "dark"
         assert_eq!(result.fonts[0].family, "Pixel");
         assert_eq!(result.fonts[0].weight, 700);
         assert_eq!(result.fonts[0].style, crate::plugins::FontStyle::Italic);
-        assert_eq!(
-            result.fonts[0].data,
-            base64::engine::general_purpose::STANDARD.encode(b"wOF2font")
-        );
+        let data = base64::engine::general_purpose::STANDARD
+            .decode(&result.fonts[0].data)
+            .unwrap();
+        assert_eq!(nsh_core::font_family(&data).unwrap(), "Pixel");
     }
 
     #[test]
@@ -602,6 +611,10 @@ appearance = "dark"
         let invalid = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap_err();
         assert_eq!(invalid.kind, ExternalThemeFontErrorKind::InvalidPackage);
 
+        std::fs::write(&path, b"wOF2font").unwrap();
+        let corrupt = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap_err();
+        assert_eq!(corrupt.kind, ExternalThemeFontErrorKind::InvalidPackage);
+
         let mut oversized = vec![0; crate::plugins::installer::FONT_FILE_LIMIT + 1];
         oversized[..4].copy_from_slice(b"wOF2");
         std::fs::write(path, oversized).unwrap();
@@ -626,7 +639,7 @@ appearance = "dark"
         std::fs::create_dir_all(checkout.join("fonts")).unwrap();
         std::fs::create_dir(&plugins).unwrap();
         std::fs::write(checkout.join("rencal-plugin.toml"), FONT_MANIFEST).unwrap();
-        std::fs::write(checkout.join("fonts/pixel.woff2"), b"wOF2font").unwrap();
+        std::fs::write(checkout.join("fonts/pixel.woff2"), PIXEL_WOFF2).unwrap();
         symlink(&checkout, plugins.join("alice.dusk")).unwrap();
 
         let fonts = load_fonts_from(&plugins, "alice.dusk/dark").unwrap();

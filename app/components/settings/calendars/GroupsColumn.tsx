@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 import { PlusIcon } from "@/icons"
 import { calendars } from "@/stores/calendar"
 import { groups as calendarGroups, setGroups } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 export const DEFAULT_GROUP = "default"
 
@@ -60,7 +60,7 @@ export function GroupsColumn(props: {
       contentClass="gap-2 px-0 py-[15px]"
     >
       <View class="flex-row items-center justify-between px-(--layout-padding)">
-        <Text class={cn("font-mono text-sm text-muted-foreground", displayCase())}>Groups</Text>
+        <Text class={cn(typography.section(), "text-muted-foreground")}>Groups</Text>
         <Button size="icon-xs" variant="ghost" onPress={() => modal.set({ mode: "create" })}>
           <PlusIcon class="size-4" />
         </Button>
@@ -79,7 +79,8 @@ export function GroupsColumn(props: {
               >
                 <Text
                   class={cn(
-                    "truncate text-sm",
+                    typography.body(),
+                    "truncate",
                     group() === props.selectedGroup
                       ? "text-secondary-foreground"
                       : "text-muted-foreground",

@@ -3,6 +3,7 @@ import { TimeField as BaseTimeField } from "nsh/base"
 import { cn } from "@/lib/utils"
 
 import { timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 
 const pad = (value: number) => String(value).padStart(2, "0")
 
@@ -31,8 +32,8 @@ export function TimeField(props: {
           "hover:border-input focus-within:border-transparent focus-within:hover:border-transparent focus-within:bg-secondary",
         props.class,
       )}
-      segmentClass="rounded-(--radius-xs) text-sm text-foreground focus:bg-accent"
-      separatorClass="text-sm text-foreground"
+      segmentClass={cn(typography.body(), "rounded-(--radius-xs) text-foreground focus:bg-accent")}
+      separatorClass={cn(typography.body(), "text-foreground")}
     />
   )
 }

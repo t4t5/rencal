@@ -11,7 +11,11 @@ use rencal_native::skill_install::{self, Skill};
 
 mod commands_cli;
 
-const RUNNER_NAME: &str = if cfg!(windows) { "renCal.exe" } else { "renCal" };
+const RUNNER_NAME: &str = if cfg!(windows) {
+    "renCal.exe"
+} else {
+    "renCal"
+};
 
 const PLUGIN_INSTALL_USAGE: &str = "usage: rencal plugin install <owner/repo-or-github-url>";
 const SKILL_USAGE: &str = "usage: rencal skill <install|uninstall|show>";

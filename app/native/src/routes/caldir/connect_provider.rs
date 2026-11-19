@@ -2,12 +2,12 @@ use super::helpers::{
     build_connect_options, credential_fields, provider, save_connected_calendars,
 };
 use super::types::{Calendar, CredentialsConnectResult};
+use crate::host::AppHandle;
 use crate::oauth;
 use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::Provider;
-use crate::host::AppHandle;
 
 pub(super) async fn handler(
     state: &AppState,
@@ -93,8 +93,7 @@ pub(super) async fn run_with_data(
                 step,
                 data: step_data,
             } => {
-                data =
-                    run_connect_step(step, step_data, &mut listener, &redirect_uri).await?;
+                data = run_connect_step(step, step_data, &mut listener, &redirect_uri).await?;
             }
         }
     }
@@ -127,13 +126,12 @@ async fn run_connect_step(
                 RpcError::new(RpcErrorKind::InvalidInput, format!("Invalid auth URL: {e}"))
             })?;
 
-            crate::host::open_url(auth_url.as_str())
-                .map_err(|e| {
-                    RpcError::new(
-                        RpcErrorKind::Internal,
-                        format!("Failed to open browser: {e}"),
-                    )
-                })?;
+            crate::host::open_url(auth_url.as_str()).map_err(|e| {
+                RpcError::new(
+                    RpcErrorKind::Internal,
+                    format!("Failed to open browser: {e}"),
+                )
+            })?;
 
             let port = listener
                 .local_addr()
@@ -192,13 +190,12 @@ async fn run_connect_step(
                 )
             })?;
 
-            crate::host::open_url(auth_url.as_str())
-                .map_err(|e| {
-                    RpcError::new(
-                        RpcErrorKind::Internal,
-                        format!("Failed to open browser: {e}"),
-                    )
-                })?;
+            crate::host::open_url(auth_url.as_str()).map_err(|e| {
+                RpcError::new(
+                    RpcErrorKind::Internal,
+                    format!("Failed to open browser: {e}"),
+                )
+            })?;
 
             let port = listener
                 .local_addr()

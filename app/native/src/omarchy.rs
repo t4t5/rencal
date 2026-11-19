@@ -2,10 +2,10 @@ use crate::events::AppEvent;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use crate::host::AppHandle;
 use notify::RecursiveMode;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use crate::host::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
 

@@ -34,6 +34,7 @@ import {
   updateError,
   updatePhase,
 } from "@/stores/update"
+import { typography } from "@/themes"
 
 const TIME_FORMATS: { value: TimeFormat; title: string }[] = [
   { value: "24h", title: "24h" },
@@ -93,7 +94,7 @@ export function GeneralPage() {
         <SettingsRow
           label="renCal"
           description={`Version ${appInfo.version}`}
-          detail={<ErrorText class="text-xs" message={updateError()} />}
+          detail={<ErrorText class={typography.caption()} message={updateError()} />}
         >
           <If when={availableUpdate()}>
             <Button
@@ -127,7 +128,7 @@ function DataDirectoryRow() {
     <SettingsRow
       label="Data directory"
       description={calendarDir()}
-      detail={<ErrorText class="text-xs" message={error()} />}
+      detail={<ErrorText class={typography.caption()} message={error()} />}
     >
       <Button variant="secondary" size="sm" label="Change" onPress={() => void change()} />
     </SettingsRow>

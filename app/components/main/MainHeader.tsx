@@ -25,6 +25,7 @@ import {
   sidebarCollapsed,
   toggleSidebar,
 } from "@/stores/view"
+import { controlSurface, typography } from "@/themes"
 import { resolveView, VIEWS } from "@/views/manifest"
 
 /** A dropdown that looks like a secondary button, as the old select button did. */
@@ -34,7 +35,7 @@ function SelectMenu(props: { label: string; children?: JSX.Element }) {
       align="end"
       popupClass="w-48"
       trigger={
-        <View class={cn(buttonClass("secondary"), "min-w-24 justify-between")}>
+        <View class={cn(buttonClass("secondary"), controlSurface(), "min-w-24 justify-between")}>
           <Text class={buttonLabelClass("secondary")}>{props.label}</Text>
           <ChevronDownIcon class="size-3 shrink-0" color={String(token("muted-foreground"))} />
         </View>
@@ -64,9 +65,11 @@ function CalendarViewDropdown() {
         {(view) => (
           <MenuItem class="gap-3" onSelect={() => setCalendarView(view().id)}>
             <CheckSlot checked={resolveView(calendarView()).id === view().id} />
-            <Text class="text-sm flex-1">{view().name}</Text>
+            <Text class={cn(typography.body(), "flex-1")}>{view().name}</Text>
             <If when={shortcut(view().id)}>
-              {(keys) => <Text class="text-xs text-muted-foreground">{keys()}</Text>}
+              {(keys) => (
+                <Text class={cn(typography.caption(), "text-muted-foreground")}>{keys()}</Text>
+              )}
             </If>
           </MenuItem>
         )}
@@ -85,7 +88,7 @@ function GroupSwitcher() {
           {(name) => (
             <MenuItem class="gap-3" onSelect={() => setActiveGroup(name())}>
               <CheckSlot checked={activeGroup() === name()} />
-              <Text class="text-sm flex-1">{formatGroupName(name())}</Text>
+              <Text class={cn(typography.body(), "flex-1")}>{formatGroupName(name())}</Text>
             </MenuItem>
           )}
         </Each>

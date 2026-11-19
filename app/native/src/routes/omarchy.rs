@@ -1,7 +1,6 @@
 use crate::omarchy::{self, OmarchyColors};
 use crate::routes::RpcResult;
 
-
 #[derive(Clone)]
 pub struct OmarchyApiImpl;
 

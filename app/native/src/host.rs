@@ -33,5 +33,8 @@ pub fn open_url(url: &str) -> std::io::Result<()> {
     } else {
         "xdg-open"
     };
-    std::process::Command::new(opener).arg(url).spawn().map(drop)
+    std::process::Command::new(opener)
+        .arg(url)
+        .spawn()
+        .map(drop)
 }

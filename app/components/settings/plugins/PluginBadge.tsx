@@ -2,6 +2,8 @@ import { type JSX, Text, View } from "nsh"
 
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 import { CONTRIBUTION_LABELS, type PluginListItem } from "./plugin-list"
 
 const VARIANTS = {
@@ -15,7 +17,7 @@ export function PluginBadge(props: { variant?: keyof typeof VARIANTS; children?:
   const look = () => VARIANTS[props.variant ?? "outline"]
   return (
     <View class={cn("shrink-0 rounded-(--radius-xs) border px-1.5 py-0.5", look().box)}>
-      <Text class={cn("text-xs", look().text)}>{props.children}</Text>
+      <Text class={cn(typography.caption(), look().text)}>{props.children}</Text>
     </View>
   )
 }

@@ -16,7 +16,7 @@ const opened = async () => {
 test("? shows the keyboard shortcuts, with the bound keys", async () => {
   const app = await opened()
   await app.keyboard.press("shift+/")
-  await app.waitFor("Keyboard shortcuts")
+  await app.waitFor("KEYBOARD SHORTCUTS")
   expect(app.shows("Go to today")).toBe(true)
 })
 
@@ -25,7 +25,7 @@ test("mod+k toggles the palette, and a command runs from it", async () => {
   await app.keyboard.press("mod+k")
   await app.waitFor("Show keyboard shortcuts")
   await app.press("Show keyboard shortcuts")
-  await app.waitFor("Keyboard shortcuts")
+  await app.waitFor("KEYBOARD SHORTCUTS")
   expect(app.shows("Type a command…")).toBe(false)
 })
 

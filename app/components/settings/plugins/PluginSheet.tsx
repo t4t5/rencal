@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 
 import { PluginBadges } from "./PluginBadge"
 import { createPluginAction, PluginDetails } from "./PluginDetails"
@@ -36,9 +36,7 @@ export function PluginSheet(props: {
         <View class="min-w-0 gap-4 p-6">
           <View class="gap-3">
             <View class="flex-row items-start justify-between gap-4">
-              <Text class={cn("min-w-0 flex-1 font-mono text-lg", displayCase())}>
-                {props.plugin.name}
-              </Text>
+              <Text class={cn(typography.title(), "min-w-0 flex-1")}>{props.plugin.name}</Text>
               <Button
                 variant="ghost"
                 size="icon-xs"
@@ -50,7 +48,9 @@ export function PluginSheet(props: {
             </View>
             <PluginBadges plugin={props.plugin} />
             <If when={props.plugin.description}>
-              <Text class="text-sm text-muted-foreground">{props.plugin.description}</Text>
+              <Text class={cn(typography.body(), "text-muted-foreground")}>
+                {props.plugin.description}
+              </Text>
             </If>
           </View>
           <PluginDetails plugin={props.plugin} state={state} />

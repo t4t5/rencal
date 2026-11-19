@@ -20,6 +20,7 @@ import {
   unbindKeyEdits,
 } from "@/lib/key-bindings"
 import { toast } from "@/lib/toast"
+import { cn } from "@/lib/utils"
 
 import { CloseIcon, PlusIcon, SearchIcon, UndoIcon } from "@/icons"
 import {
@@ -29,6 +30,7 @@ import {
   keyErrors,
   userBindings,
 } from "@/stores/commands"
+import { typography } from "@/themes"
 
 import { actionRows } from "./action-rows"
 import { captureKeys } from "./key-capture"
@@ -97,7 +99,7 @@ export function ShortcutsPage() {
       <If when={keyErrors().length > 0}>
         <View class="gap-1">
           <Each of={keyErrors()}>
-            {(error) => <Text class="text-sm text-destructive">{error()}</Text>}
+            {(error) => <Text class={cn(typography.body(), "text-destructive")}>{error()}</Text>}
           </Each>
         </View>
       </If>
@@ -134,10 +136,14 @@ export function ShortcutsPage() {
       </Each>
 
       <If when={filteredRows().length === 0}>
-        <Text class="py-10 text-center text-sm text-muted-foreground">No shortcuts found</Text>
+        <Text class={cn(typography.body(), "py-10 text-center text-muted-foreground")}>
+          No shortcuts found
+        </Text>
       </If>
 
-      <Text class="text-xs text-muted-foreground">Saved to ~/.config/rencal/keys.toml</Text>
+      <Text class={cn(typography.caption(), "text-muted-foreground")}>
+        Saved to ~/.config/rencal/keys.toml
+      </Text>
     </SettingsContent>
   )
 }
@@ -174,7 +180,7 @@ function ShortcutRow(props: {
           when={props.capturing}
           else={
             <If when={props.keys.length === 0}>
-              <Text class="text-xs text-muted-foreground">None</Text>
+              <Text class={cn(typography.caption(), "text-muted-foreground")}>None</Text>
             </If>
           }
         >
@@ -210,7 +216,7 @@ function KeyCapture(props: { onCapture: (keys: string) => void; onCancel: () => 
   cleanup(captureKeys(props.onCapture, props.onCancel))
   return (
     <Button size="xs" onPress={props.onCancel}>
-      <Text class="text-xs text-primary-foreground">Press keys…</Text>
+      <Text class={cn(typography.caption(), "text-primary-foreground")}>Press keys…</Text>
     </Button>
   )
 }

@@ -11,6 +11,7 @@ import {
   describeAction,
 } from "@/lib/commands"
 import type { Binding } from "@/lib/key-bindings"
+import { cn } from "@/lib/utils"
 
 import { CloseIcon, SearchIcon } from "@/icons"
 import {
@@ -20,6 +21,7 @@ import {
   setShortcutsOpen,
   shortcutsOpen,
 } from "@/stores/commands"
+import { typography } from "@/themes"
 
 import { ShortcutKeys } from "./ShortcutKeys"
 
@@ -51,13 +53,13 @@ export function shortcutRows(list: readonly Binding[], values: CommandValues): S
 function ShortcutRow(props: { row: () => ShortcutRowData }) {
   return (
     <View class="min-h-8 flex-row items-center justify-between gap-4">
-      <Text class="flex-1 text-sm text-muted-foreground">{props.row().label}</Text>
+      <Text class={cn(typography.body(), "flex-1 text-muted-foreground")}>{props.row().label}</Text>
       <View class="shrink-0 flex-row items-center gap-1.5">
         <Each of={props.row().keys}>
           {(keys, index) => (
             <View class="flex-row items-center gap-1.5">
               <If when={index() > 0}>
-                <Text class="text-xs text-muted-foreground">or</Text>
+                <Text class={cn(typography.caption(), "text-muted-foreground")}>or</Text>
               </If>
               <ShortcutKeys keys={keys()} />
             </View>
@@ -73,7 +75,7 @@ function ShortcutGroupSection(props: { group: () => CommandGroup; rows: () => Sh
   return (
     <If when={groupRows().length > 0}>
       <View class="gap-2">
-        <Text class="text-sm font-semibold text-foreground">{props.group()}</Text>
+        <Text class={cn(typography.body(), "font-semibold text-foreground")}>{props.group()}</Text>
         <Each of={groupRows()} key={(row) => row.action}>
           {(row) => <ShortcutRow row={row} />}
         </Each>
@@ -108,7 +110,9 @@ export function ShortcutsOverlay() {
       <View class="flex-1 min-h-0">
         <View class="shrink-0 gap-4 border-b border-border p-5">
           <View class="flex-row items-center justify-between gap-4">
-            <Text class="text-lg font-semibold text-foreground">Keyboard shortcuts</Text>
+            <Text class={cn(typography.title(), "font-semibold text-foreground")}>
+              Keyboard shortcuts
+            </Text>
             <Button variant="ghost" size="icon-xs" onPress={() => setShortcutsOpen(false)}>
               <CloseIcon class="size-4" />
             </Button>
@@ -130,7 +134,9 @@ export function ShortcutsOverlay() {
           <If when={keyErrors().length > 0}>
             <View class="mb-6 gap-1">
               <Each of={keyErrors()}>
-                {(error) => <Text class="text-sm text-destructive">{error()}</Text>}
+                {(error) => (
+                  <Text class={cn(typography.body(), "text-destructive")}>{error()}</Text>
+                )}
               </Each>
             </View>
           </If>
@@ -138,7 +144,7 @@ export function ShortcutsOverlay() {
           <If
             when={filtered().length > 0}
             else={
-              <Text class="py-10 text-center text-sm text-muted-foreground">
+              <Text class={cn(typography.body(), "py-10 text-center text-muted-foreground")}>
                 No shortcuts found
               </Text>
             }
@@ -151,7 +157,7 @@ export function ShortcutsOverlay() {
           </If>
 
           <View class="border-t border-border pt-4">
-            <Text class="text-xs text-muted-foreground">
+            <Text class={cn(typography.caption(), "text-muted-foreground")}>
               Change keys in <Text class="font-mono">~/.config/rencal/keys.toml</Text>.
             </Text>
           </View>

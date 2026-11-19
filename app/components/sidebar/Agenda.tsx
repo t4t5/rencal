@@ -65,7 +65,7 @@ import { triggerDelete } from "@/stores/delete"
 import { activeEvent, eventsReady, eventsSettled, extendActiveRange } from "@/stores/events"
 import { pressEvent } from "@/stores/popover"
 import { timeFormat } from "@/stores/settings"
-import { displayCase, displayWeight } from "@/themes"
+import { typography } from "@/themes"
 
 // A day header's height: what the sticky header covers when a row scrolls in from above.
 const HEADER_HEIGHT = 32
@@ -116,23 +116,8 @@ function DateBar(props: { day: number }) {
   const label = () => (currentDay(), getRelativeDayLabel(date()))
   return (
     <View class="h-8 flex-row items-center gap-2 bg-sidebar px-(--layout-padding) py-1.5">
-      <Text
-        class={cn(
-          "font-mono text-[13px]",
-          displayCase(),
-          displayWeight(),
-          isToday() && "text-today",
-        )}
-      >
-        {label()}
-      </Text>
-      <Text
-        class={cn(
-          "font-mono text-[13px]",
-          displayCase(),
-          isToday() ? "text-today" : "text-muted-foreground",
-        )}
-      >
+      <Text class={cn(typography.section(), isToday() && "text-today")}>{label()}</Text>
+      <Text class={cn(typography.section(), isToday() ? "text-today" : "text-muted-foreground")}>
         {formatDayMonth(date())}
       </Text>
     </View>
@@ -169,7 +154,8 @@ function AllDayChip(props: { event: () => CalendarEvent; day: number }) {
     >
       <Text
         class={cn(
-          "text-xs leading-4 line-clamp-1",
+          typography.caption(),
+          "leading-4 line-clamp-1",
           rsvpOf(props.event()) === "declined" && "line-through",
         )}
         style={{ color: paint().foreground }}
@@ -247,7 +233,7 @@ function TimedRow(props: { row: () => AgendaTimedRow }) {
         <View class="h-4 flex-row items-center gap-1.5">
           <Text
             class={cn(
-              "font-mono text-xs",
+              typography.numerical(),
               highlighted() ? "text-selected-foreground" : "text-muted-foreground",
             )}
           >
@@ -259,7 +245,8 @@ function TimedRow(props: { row: () => AgendaTimedRow }) {
         </View>
         <Text
           class={cn(
-            "text-sm font-medium",
+            typography.body(),
+            "font-medium",
             highlighted() && "text-selected-foreground",
             !event().summary && "text-muted-foreground",
             rsvpOf(event()) === "declined" && "line-through",
@@ -282,7 +269,9 @@ function AgendaCell(props: { row: () => AgendaRow }) {
     <View class={cn(props.row().last && "border-b border-border pb-2")}>
       <If when={asKind(props.row(), "header")}>{(row) => <DateBar day={row().day} />}</If>
       <If when={asKind(props.row(), "empty")}>
-        <Text class="px-(--layout-padding) py-1 text-sm text-muted-foreground">No events</Text>
+        <Text class={cn(typography.body(), "px-(--layout-padding) py-1 text-muted-foreground")}>
+          No events
+        </Text>
       </If>
       <If when={asKind(props.row(), "all-day")}>{(row) => <AllDayRow row={row} />}</If>
       <If when={asKind(props.row(), "timed")}>{(row) => <TimedRow row={row} />}</If>
@@ -294,7 +283,7 @@ function GetStartedState() {
   const adding = signal(false)
   return (
     <View class="items-center gap-2 p-6">
-      <Text class="text-center text-sm text-muted-foreground">
+      <Text class={cn(typography.body(), "text-center text-muted-foreground")}>
         Connect your calendar to get started.
       </Text>
       <Button size="sm" class="mt-2" label="Connect a calendar" onPress={() => adding.set(true)} />
@@ -511,7 +500,7 @@ export function Agenda() {
       <If when={calendars().length > 0} else={<GetStartedState />}>
         <If
           when={agendaHasEvents()}
-          else={<Text class="p-2 text-sm text-muted-foreground">No events</Text>}
+          else={<Text class={cn(typography.body(), "p-2 text-muted-foreground")}>No events</Text>}
         >
           <AgendaList />
         </If>

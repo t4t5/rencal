@@ -44,11 +44,10 @@ pub use types::{
     UpdateEventInput,
 };
 
+use crate::host::AppHandle;
 use crate::routes::RpcResult;
 use crate::state::{AppState, ProviderInfo};
 use std::sync::Arc;
-use crate::host::AppHandle;
-
 
 #[derive(Clone)]
 pub struct CaldirApiImpl {
@@ -111,7 +110,11 @@ impl CaldirApiImpl {
         delete_event::handler(&self.state, calendar_slug, event_id)
     }
 
-    pub async fn delete_recurring_series(self, calendar_slug: String, uid: String) -> RpcResult<()> {
+    pub async fn delete_recurring_series(
+        self,
+        calendar_slug: String,
+        uid: String,
+    ) -> RpcResult<()> {
         delete_recurring_series::handler(&self.state, calendar_slug, uid)
     }
 

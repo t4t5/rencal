@@ -1,6 +1,10 @@
 import { Text } from "nsh"
 import { Tooltip as BaseTooltip } from "nsh/base"
 
+import { cn } from "@/lib/utils"
+
+import { typography } from "@/themes"
+
 /** Goes in a view's `tooltip` prop: `<View tooltip={<Tooltip label="Save" />}>`. */
 export function Tooltip(props: {
   label: string
@@ -13,7 +17,7 @@ export function Tooltip(props: {
       delay={props.delay ?? 0}
       class="rounded-(--radius-md) bg-tooltip px-3 py-1.5"
     >
-      <Text class="text-xs text-tooltip-foreground">{props.label}</Text>
+      <Text class={cn(typography.caption(), "text-tooltip-foreground")}>{props.label}</Text>
     </BaseTooltip>
   )
 }

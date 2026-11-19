@@ -25,6 +25,7 @@ import {
   regionsUnder,
   stopAnnotate,
 } from "@/stores/annotate"
+import { typography } from "@/themes"
 
 const KEY = "mod+shift+a"
 const EDITOR_WIDTH = 288
@@ -48,7 +49,9 @@ function Highlight(props: { target: () => Target }) {
       style={{ ...position(rect()), pointerEvents: "none" }}
     >
       <View class="absolute top-0 left-0 bg-primary px-1.5 py-0.5">
-        <Text class="text-2xs font-mono text-primary-foreground">{props.target().label}</Text>
+        <Text class={cn(typography.numericalSm(), "text-primary-foreground")}>
+          {props.target().label}
+        </Text>
       </View>
     </View>
   )
@@ -76,7 +79,9 @@ function PinMarker(props: { pin: () => Pin; index: () => number }) {
         cursor: "pointer",
       }}
     >
-      <Text class="text-2xs font-mono font-bold text-primary-foreground">{props.index() + 1}</Text>
+      <Text class={cn(typography.numericalSm(), "font-bold text-primary-foreground")}>
+        {props.index() + 1}
+      </Text>
     </View>
   )
 }
@@ -92,9 +97,13 @@ function NoteEditor(props: { pin: () => Pin; index: () => number }) {
       class={cn(POPUP_SURFACE, "absolute gap-2 p-3")}
       style={{ left: left(), top: top(), width: EDITOR_WIDTH }}
     >
-      <Text class="text-xs font-semibold text-foreground">Note {props.index() + 1}</Text>
+      <Text class={cn(typography.caption(), "font-semibold text-foreground")}>
+        Note {props.index() + 1}
+      </Text>
       <Each of={props.pin().context}>
-        {(line) => <Text class="text-2xs text-muted-foreground line-clamp-2">{line()}</Text>}
+        {(line) => (
+          <Text class={cn(typography.micro(), "text-muted-foreground line-clamp-2")}>{line()}</Text>
+        )}
       </Each>
       <Input
         autoFocus
@@ -126,7 +135,7 @@ function Bar() {
       style={{ pointerEvents: "box-none" }}
     >
       <View class={cn(POPUP_SURFACE, "flex-row items-center gap-3 px-3 py-2")}>
-        <Text class="text-xs text-foreground">
+        <Text class={cn(typography.caption(), "text-foreground")}>
           {count() === 0
             ? "Click anything to pin a note"
             : `${count()} note${count() === 1 ? "" : "s"}`}

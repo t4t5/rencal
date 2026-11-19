@@ -2,7 +2,6 @@ use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::skill_install::{self, Skill, SkillsStatus};
 
-
 #[derive(Clone)]
 pub struct AgentsApiImpl;
 

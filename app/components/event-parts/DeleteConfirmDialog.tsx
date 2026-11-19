@@ -3,6 +3,8 @@ import { computed, Text } from "nsh"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
+import { cn } from "@/lib/utils"
+
 import {
   closeDeleteDialog,
   deleteAll,
@@ -10,6 +12,7 @@ import {
   deleteTarget,
   deleteThis,
 } from "@/stores/delete"
+import { typography } from "@/themes"
 
 export function DeleteConfirmDialog() {
   // Keep showing the last event while the dialog leaves.
@@ -25,7 +28,7 @@ export function DeleteConfirmDialog() {
     >
       <DialogHeader>
         <DialogTitle>{isRecurring() ? "Delete recurring event" : "Delete event"}</DialogTitle>
-        <Text class="text-sm text-muted-foreground">
+        <Text class={cn(typography.body(), "text-muted-foreground")}>
           {isRecurring()
             ? name()
               ? "The event "

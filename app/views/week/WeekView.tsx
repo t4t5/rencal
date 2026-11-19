@@ -40,7 +40,7 @@ import {
   setDragScroller,
 } from "@/stores/drag"
 import { extraTimeZones, timeFormat } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { typography } from "@/themes"
 import { openDayMenu } from "@/views/event-block"
 import type { Spanning } from "@/views/month/layout"
 import { trackWindow } from "@/views/track-window"
@@ -110,7 +110,10 @@ function TimeGutter(props: { zones: () => GutterZone[] }) {
             <Each of={HOURS}>
               {(hour) => (
                 <Text
-                  class="absolute right-1.5 font-mono text-2xs leading-none text-muted-foreground"
+                  class={cn(
+                    typography.numericalSm(),
+                    "absolute right-1.5 leading-none text-muted-foreground",
+                  )}
                   style={{ top: hour() * HOUR_HEIGHT - 6 }}
                 >
                   {(() => {
@@ -190,9 +193,13 @@ function CurrentTimeIndicator(props: { inset: boolean }) {
       style={{ top: top() - 6, pointerEvents: "none" }}
     >
       <View class="flex-row shrink-0">
-        <Text class="text-2xs font-medium leading-none text-today">{label()[0]}</Text>
-        <Text class="text-2xs font-medium leading-none text-today animate-pulse">:</Text>
-        <Text class="text-2xs font-medium leading-none text-today">
+        <Text class={cn(typography.micro(), "font-medium leading-none text-today")}>
+          {label()[0]}
+        </Text>
+        <Text class={cn(typography.micro(), "font-medium leading-none text-today animate-pulse")}>
+          :
+        </Text>
+        <Text class={cn(typography.micro(), "font-medium leading-none text-today")}>
           {label()[1]}
           {label()[2]}
         </Text>
@@ -299,7 +306,7 @@ function DayHeader(props: {
         )}
         style={{ height: DAY_HEADER_HEIGHT }}
       >
-        <Text class={cn("font-mono text-2xs text-muted-foreground", displayCase())}>
+        <Text class={cn(typography.numericalSm(), "text-muted-foreground")}>
           {formatWeekday(date(), "short")}
         </Text>
         <View
@@ -308,7 +315,9 @@ function DayHeader(props: {
             isToday() && "bg-today",
           )}
         >
-          <Text class={cn("font-mono text-xs font-medium", isToday() && "text-today-foreground")}>
+          <Text
+            class={cn(typography.numerical(), "font-medium", isToday() && "text-today-foreground")}
+          >
             {date().day}
           </Text>
         </View>

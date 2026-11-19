@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+import { cn } from "@/lib/utils"
+
 import { calendarOf } from "@/stores/calendar"
 import {
   cancelMassDelete,
@@ -16,6 +18,7 @@ import {
   discardMassDelete,
   pendingMassDelete,
 } from "@/stores/sync"
+import { typography } from "@/themes"
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`
 
@@ -41,10 +44,10 @@ export function MassDeleteConfirmDialog() {
         <Each of={items()} key={(preview) => preview.calendar_slug}>
           {(preview) => (
             <View class="flex-row justify-between gap-4 rounded-(--radius-xs) border border-border p-2">
-              <Text class="truncate text-sm">
+              <Text class={cn(typography.body(), "truncate")}>
                 {calendarOf(preview().calendar_slug)?.name ?? preview().calendar_slug}
               </Text>
-              <Text class="text-sm text-muted-foreground tabular-nums">
+              <Text class={cn(typography.body(), "text-muted-foreground tabular-nums")}>
                 {preview().to_push_delete_count}
               </Text>
             </View>

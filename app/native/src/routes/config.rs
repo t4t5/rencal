@@ -92,7 +92,6 @@ impl From<ThemeSettings> for rencal_config::ThemeConfig {
     }
 }
 
-
 #[derive(Clone)]
 pub struct ConfigApiImpl;
 

@@ -6,6 +6,8 @@ import { Select } from "@/components/ui/select"
 import type { EventAvailability } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
+import { typography } from "@/themes"
+
 const OPTIONS: { value: EventAvailability; title: string }[] = [
   { value: "busy", title: "Busy" },
   { value: "free", title: "Free" },
@@ -32,7 +34,7 @@ export function AvailabilitySelect(props: {
           {/* Empty, so the text starts at the column of the rows with icons. */}
           <ItemMedia />
           <ItemContent>
-            <Text class="truncate text-sm text-foreground">
+            <Text class={cn(typography.body(), "truncate text-foreground")}>
               {props.value === "busy" ? "Busy" : "Free"}
             </Text>
           </ItemContent>

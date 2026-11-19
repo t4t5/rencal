@@ -7,15 +7,16 @@ import { DEFAULT_REMINDER_VALUES, humanDuration, reminderQueryValues } from "@/l
 import { cn } from "@/lib/utils"
 
 import { BellIcon } from "@/icons"
+import { typography } from "@/themes"
 
 import { RemoveItemButton } from "./RemoveItemButton"
 
 function HumanDuration(props: { mins: number }) {
   return (
     <View class="flex-row items-baseline gap-1.5">
-      <Text class="text-sm text-foreground">{humanDuration(props.mins)}</Text>
+      <Text class={cn(typography.body(), "text-foreground")}>{humanDuration(props.mins)}</Text>
       <If when={props.mins > 0}>
-        <Text class="text-sm text-muted-foreground">before</Text>
+        <Text class={cn(typography.body(), "text-muted-foreground")}>before</Text>
       </If>
     </View>
   )

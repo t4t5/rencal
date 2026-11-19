@@ -17,6 +17,7 @@ import { jumpToEvent } from "@/stores/agenda"
 import { calendarOf, calendars, visibleSlugs } from "@/stores/calendar"
 import { searchOpen, setSearchOpen } from "@/stores/commands"
 import { timeFormat } from "@/stores/settings"
+import { typography } from "@/themes"
 
 const DEBOUNCE_MS = 300
 const MIN_QUERY_LENGTH = 2
@@ -39,13 +40,16 @@ function ResultRow(props: { event: CalendarEvent | undefined }) {
       <View class="flex-1 min-w-0">
         <Text
           class={cn(
-            "text-sm font-medium text-popover-foreground group-focus:text-accent-foreground truncate",
+            typography.body(),
+            "font-medium text-popover-foreground group-focus:text-accent-foreground truncate",
             rsvp() === "declined" && "line-through",
           )}
         >
           {props.event?.summary ?? ""}
         </Text>
-        <Text class="text-xs text-muted-foreground">{props.event ? whenOf(props.event) : ""}</Text>
+        <Text class={cn(typography.caption(), "text-muted-foreground")}>
+          {props.event ? whenOf(props.event) : ""}
+        </Text>
       </View>
     </View>
   )
@@ -118,20 +122,22 @@ export function SearchPalette() {
         accessibilityLabel="Search events"
         searchAccessibilityLabel="Search visible calendars for an event"
         searchBarClass={cn("h-12", (!hasQuery() || searching()) && "border-b-0")}
-        searchClass="text-base"
+        searchClass={typography.bodyLg()}
         listClass={cn("max-h-[400px] p-0", !hasQuery() && "max-h-0")}
         itemClass="rounded-none px-3 py-1.5"
         onCancel={() => setSearchOpen(false)}
         onSelect={(event) => select(event.id)}
         searchSuffix={
           <If when={searching()}>
-            <Text class="text-xs text-muted-foreground">Searching…</Text>
+            <Text class={cn(typography.caption(), "text-muted-foreground")}>Searching…</Text>
           </If>
         }
         renderItem={(entry) => <ResultRow event={eventOf(entry)} />}
         empty={
           <If when={hasQuery()}>
-            <Text class="py-6 text-center text-sm text-muted-foreground">No events found.</Text>
+            <Text class={cn(typography.body(), "py-6 text-center text-muted-foreground")}>
+              No events found.
+            </Text>
           </If>
         }
       />
