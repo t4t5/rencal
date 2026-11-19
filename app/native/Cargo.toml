@@ -19,8 +19,8 @@ provider-tag = "v0.14.12"
 name = "rencal_native"
 
 [dependencies]
-nsh-core = "0.5.0"
-nsh-base = "0.5.0"
+nsh-core = "0.6.0"
+nsh-base = "0.6.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
