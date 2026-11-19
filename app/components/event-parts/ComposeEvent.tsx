@@ -1,4 +1,4 @@
-import { type InputRef, View } from "nsh"
+import { View } from "nsh"
 import { rrulestr } from "rrule"
 
 import { Button } from "@/components/ui/button"
@@ -30,7 +30,7 @@ import {
 import { EventInfo } from "./EventInfo"
 
 export function ComposeEventInner(props: {
-  summaryRef?: (ref: InputRef) => void
+  autoFocusSummary?: boolean
   onCreated: () => void
   onBeforeCreate?: (start: EventTime) => void
 }) {
@@ -62,7 +62,7 @@ export function ComposeEventInner(props: {
     <View class="px-2 pt-2">
       <EventInfo
         onClose={() => void create()}
-        summaryRef={(input) => props.summaryRef?.(input)}
+        autoFocusSummary={props.autoFocusSummary}
         summary={draftEvent().summary}
         onChangeSummary={(summary) => updateDraft({ summary })}
         description={draftEvent().description}

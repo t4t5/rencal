@@ -39,6 +39,8 @@ function Section(props: { flushTop?: boolean; flushBottom?: boolean; children?: 
 export function EventInfo(props: {
   readonly?: boolean
   summaryRef?: (ref: InputRef) => void
+  /** Focus the title once it's on screen; `focus()` before that does nothing on Linux. */
+  autoFocusSummary?: boolean
   summary?: string | null
   onChangeSummary: (summary: string) => void
   onClose?: () => void
@@ -96,6 +98,7 @@ export function EventInfo(props: {
           <View class="min-h-(--control-height) justify-center">
             <Textarea
               ref={(input) => props.summaryRef?.(input)}
+              autoFocus={props.autoFocusSummary}
               testID="event-summary"
               placeholder="Event Title"
               value={props.summary ?? ""}

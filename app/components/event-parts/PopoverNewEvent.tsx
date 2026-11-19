@@ -1,4 +1,4 @@
-import { effect, type InputRef } from "nsh"
+import { effect } from "nsh"
 
 import { closeDraftPopover, draftPopoverOpen } from "@/stores/draft"
 import { activeEvent } from "@/stores/events"
@@ -20,15 +20,13 @@ export function PopoverNewEvent() {
 }
 
 function NewEventPopup() {
-  let summary: InputRef | undefined
-  setTimeout(() => summary?.focus(), 0)
   return (
     <EventPopup
       name="New event popover"
       source="components/event-parts/PopoverNewEvent.tsx"
       onDismiss={closeDraftPopover}
     >
-      <ComposeEventInner summaryRef={(ref) => (summary = ref)} onCreated={closeDraftPopover} />
+      <ComposeEventInner autoFocusSummary onCreated={closeDraftPopover} />
     </EventPopup>
   )
 }
