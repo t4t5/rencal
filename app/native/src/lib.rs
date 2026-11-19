@@ -10,6 +10,7 @@ mod event_cache;
 mod events;
 mod external_themes;
 mod external_views;
+mod focus_watch;
 mod fs_watch;
 mod host;
 mod keys;
@@ -38,6 +39,7 @@ use nsh_core::prelude::*;
 use serde_json::{Value, json};
 use tokio::runtime::Runtime;
 
+use focus_watch::FocusWatch;
 use host::AppHandle;
 use routes::agents::AgentsApiImpl;
 use routes::caldir::CaldirApiImpl;
@@ -64,7 +66,7 @@ static ROUTER: OnceLock<Result<Arc<Router>, String>> = OnceLock::new();
 /// The crate's UI set: what TSX imports from `rencal/native`.
 #[native_module("rencal/native")]
 fn native(registry: &mut Registry) {
-    registry.module::<Backend>();
+    registry.module::<Backend>().register::<FocusWatch>();
 }
 
 /// Providers shipped with this build: next to the binary when packaged, where

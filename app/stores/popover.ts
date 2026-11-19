@@ -68,6 +68,12 @@ const pointAnchor = (press: PressEvent): Bounds => ({
 /** Forget the anchor, so the next popover opens in the window's middle. */
 export const clearPopoverAnchor = () => anchor.set(null)
 
+// Whether the keyboard focus is in what floats over the calendar (`Overlays`):
+// a popover, a dialog. Only Rust hears focus-within, through `FocusWatch`.
+const overlaysFocus = signal(false)
+export const overlaysFocused = () => overlaysFocus()
+export const setOverlaysFocused = (focused: boolean) => overlaysFocus.set(focused)
+
 /** Called when a press outside closed the popover of `key`. */
 export function noteDismissed(key: string) {
   dismissed = { key, at: Date.now() }

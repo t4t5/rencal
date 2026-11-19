@@ -1,4 +1,5 @@
 import { View } from "nsh"
+import { FocusWatch } from "rencal/native"
 
 import { AnnotateOverlay } from "@/components/annotate/AnnotateOverlay"
 import { ConnectPrompt } from "@/components/event-parts/ConnectPrompt"
@@ -19,6 +20,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { UpdateDialog } from "@/components/update/UpdateDialog"
 
 import { annotateEnabled } from "@/stores/annotate"
+import { setOverlaysFocused } from "@/stores/popover"
 import { isWideWindow } from "@/stores/view"
 import { EventDragOverlay } from "@/views/EventDragOverlay"
 
@@ -26,25 +28,30 @@ import { EventDragOverlay } from "@/views/EventDragOverlay"
 export function Overlays() {
   return (
     <View class="absolute">
-      <EventDragOverlay />
-      <SearchPalette />
-      <If when={isWideWindow()} else={<SheetEvent />}>
-        <PopoverEditEvent />
-        <PopoverNewEvent />
-      </If>
-      <EditRecurrenceDialog />
-      <DuplicateRecurrenceDialog />
-      <DeleteConfirmDialog />
-      <ConnectPrompt />
-      <SettingsWindow />
-      <MassDeleteConfirmDialog />
-      <PendingIcsImport />
-      <PluginInstallDialog />
-      <UpdateDialog />
-      <If when={annotateEnabled}>
-        <AnnotateOverlay />
-      </If>
-      <Toaster />
+      <FocusWatch
+        onFocusIn={() => setOverlaysFocused(true)}
+        onFocusOut={() => setOverlaysFocused(false)}
+      >
+        <EventDragOverlay />
+        <SearchPalette />
+        <If when={isWideWindow()} else={<SheetEvent />}>
+          <PopoverEditEvent />
+          <PopoverNewEvent />
+        </If>
+        <EditRecurrenceDialog />
+        <DuplicateRecurrenceDialog />
+        <DeleteConfirmDialog />
+        <ConnectPrompt />
+        <SettingsWindow />
+        <MassDeleteConfirmDialog />
+        <PendingIcsImport />
+        <PluginInstallDialog />
+        <UpdateDialog />
+        <If when={annotateEnabled}>
+          <AnnotateOverlay />
+        </If>
+        <Toaster />
+      </FocusWatch>
     </View>
   )
 }

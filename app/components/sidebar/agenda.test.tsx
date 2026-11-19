@@ -57,6 +57,27 @@ test("tab steps through events and enter opens the selected one", async () => {
   await app.waitFor("Add timezone")
 })
 
+test("tab after opening an event goes to its title, past More options", async () => {
+  const app = await opened()
+  // Step to an event of our own: only those have More options before the title.
+  for (let i = 0; i < 10; i++) {
+    await app.keyboard.press("tab")
+    await app.keyboard.press("enter")
+    await app.waitFor("Add timezone")
+    if (app.count("label:More options") > 0) break
+    await app.keyboard.press("escape")
+    await app.waitUntil(() => app.count("Add timezone") === 0)
+  }
+  await app.waitFor("label:More options")
+  const title = app.value("id:event-summary") ?? ""
+  await app.keyboard.press("tab")
+  await app.keyboard.press("x")
+  await app.waitUntil(() => app.value("id:event-summary") === `${title}x`)
+  // Back as it was, so closing saves nothing.
+  await app.keyboard.press("backspace")
+  await app.waitUntil(() => app.value("id:event-summary") === title)
+})
+
 test("the day rolls over at midnight", async () => {
   const beforeMidnight = new Date(2026, 10, 6, 23, 59, 30)
   const app = await open("../../App.tsx", { ...desktop, clock: { time: beforeMidnight } })

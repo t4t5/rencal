@@ -1,4 +1,4 @@
-import { cleanup, keymap, type JSX, signal, Text, token, untracked, View } from "nsh"
+import { cleanup, type InputRef, keymap, type JSX, signal, Text, token, untracked, View } from "nsh"
 import type { RRule, RRuleSet } from "rrule"
 
 import { Button } from "@/components/ui/button"
@@ -56,6 +56,7 @@ function OverflowMenu(props: { onDuplicate: () => void; onDelete: () => void }) 
  */
 export function EditEvent(props: {
   event: CalendarEvent
+  summaryRef?: (ref: InputRef) => void
   onRequestSave: (current: CalendarEvent, original: CalendarEvent) => void
   children?: JSX.Element
 }) {
@@ -140,6 +141,7 @@ export function EditEvent(props: {
 
       <EventInfo
         readonly={isReadonly()}
+        summaryRef={(input) => props.summaryRef?.(input)}
         summary={dirty().summary}
         onChangeSummary={(summary) => update({ summary })}
         description={dirty().description}

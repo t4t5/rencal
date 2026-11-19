@@ -48,6 +48,7 @@ Run from `app/`, with `~/.local/bin` on `PATH`. The `nsh` CLI must match the ver
 - A signal made in a component throws `not a live signal` once the component has gone: after `await`, never write one past `onClose()`. No `finally { saving.set(false) }` in a dialog.
 - No `capabilities` key doesn't mean `fs`: `fs/promises` refuses every path until `capabilities.fs` grants it, and declaring the key limits everything else. The backend reads files; `Backend.pickPath` shows the system's file dialog. `Picker.pickFiles` gives a file's bytes but no path, and picks no folders, so it doesn't replace it.
 - On desktops Tab stops at every enabled `Input`, ignoring `focusable={false}`: keep a hidden or inert field out with `disabled`. A ref's `focus()` still works on it there.
+- On Linux Tab follows GTK's focus chain across the window, so an `Overlay` isn't next after what opened it. `onFocus` / `onBlur` are only a view's own: for focus coming into or leaving a subtree, wrap it in `FocusWatch` from `rencal/native` (`native/src/focus_watch.rs`; NSH has it for Rust only, longbridge/nsh#2477).
 - Only `Input` reports keys, without modifiers. To capture a keystroke, bind them all (`components/settings/shortcuts/key-capture.ts`).
 - `style={{ display: "flex" }}` makes a view a row, like the `flex` class: write `flex-col` too.
 - `Command`'s `renderItem` content sits in a host a `flex-row` item would shrink to fit: keep `itemClass` a column (`components/ui/command.tsx` does).
