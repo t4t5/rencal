@@ -192,6 +192,8 @@ export function AttendeesDisplay(props: {
               value={inputValue()}
               invalid={hasInvalidEmail()}
               submitBehavior="submit"
+              // Blurring on a suggestion's press would add the typed text before the pick.
+              blurOnPressOutside={!showSuggestions()}
               autoCapitalize="none"
               autoCorrect={false}
               onChange={({ value }) => {

@@ -1,6 +1,11 @@
-import type { InputRef } from "nsh"
 import { signal, split, token } from "nsh"
 import { Input as BaseInput, type InputProps } from "nsh/base"
+
+import {
+  BLUR_KEYS,
+  type BlurProps,
+  withBlurOnPressOutside,
+} from "@/components/ui/blur-on-press-outside"
 
 import { cn } from "@/lib/utils"
 
@@ -9,7 +14,7 @@ import { typography } from "@/themes"
 const MIN_VERTICAL_PADDING = 6
 const BORDER_WIDTH = 1
 
-type Props = InputProps & { ref?: InputRef | ((ref: InputRef) => void) }
+type Props = Omit<InputProps, "ref"> & BlurProps
 
 /** A multiline input that grows with its text, drawing its own box. */
 export function Textarea(props: Props) {
@@ -33,15 +38,16 @@ export function TextareaInner(props: Props) {
 }
 
 function GrowingInput(props: Props & { bordered?: boolean }) {
-  const [own, rest] = split(props, ["class", "bordered", "onContentSizeChange"])
+  const [own, rest] = split(props, ["class", "bordered", "onContentSizeChange", ...BLUR_KEYS])
   const contentHeight = signal(0)
   // One line fills a control's height, inside a border of its own or its wrapper's.
   const minHeight = () => token("control-height") - 2 * BORDER_WIDTH
   const padding = () => Math.max(MIN_VERTICAL_PADDING, (minHeight() - contentHeight()) / 2)
   const border = () => (own.bordered ? 2 * BORDER_WIDTH : 0)
-  return (
+  return withBlurOnPressOutside(own, (handlers) => (
     <BaseInput
       {...rest}
+      {...handlers}
       multiline
       onContentSizeChange={(event) => {
         contentHeight.set(event.size.height)
@@ -57,5 +63,5 @@ function GrowingInput(props: Props & { bordered?: boolean }) {
         own.class,
       )}
     />
-  )
+  ))
 }
