@@ -73,9 +73,8 @@ test("backspace asks to delete the selected event, and enter confirms", async ()
   expect(app.count("Add timezone")).toBe(0)
 })
 
-test("tab after opening an event goes to its title, past More options", async () => {
-  const app = await opened()
-  // Step to an event of our own: only those have More options before the title.
+/** Opens one of our own events: only those have More options before the title. */
+async function openOwnEvent(app: App) {
   for (let i = 0; i < 10; i++) {
     await app.keyboard.press("tab")
     await app.keyboard.press("enter")
@@ -85,13 +84,45 @@ test("tab after opening an event goes to its title, past More options", async ()
     await app.waitUntil(() => app.count("Add timezone") === 0)
   }
   await app.waitFor("label:More options")
-  const title = app.value("id:event-summary") ?? ""
-  await app.keyboard.press("tab")
+}
+
+/** Types into the field with `id`, checks it took the text, and takes it back out. */
+async function expectTyping(app: App, id: string) {
+  const before = app.value(`id:${id}`) ?? ""
   await app.keyboard.press("x")
-  await app.waitUntil(() => app.value("id:event-summary") === `${title}x`)
-  // Back as it was, so closing saves nothing.
+  await app.waitUntil(() => app.value(`id:${id}`) === `${before}x`)
   await app.keyboard.press("backspace")
-  await app.waitUntil(() => app.value("id:event-summary") === title)
+  await app.waitUntil(() => app.value(`id:${id}`) === before)
+}
+
+// Headless Tab follows the tree, not GTK's order, so only `--target linux`
+// shows these keys moving between fields; headless they check the bindings.
+test("tab after opening an event goes to its title, past More options", async () => {
+  const app = await opened()
+  await openOwnEvent(app)
+  await app.keyboard.press("tab")
+  await expectTyping(app, "event-summary")
+})
+
+test("shift+tab after opening an event goes to its notes", async () => {
+  const app = await opened()
+  await openOwnEvent(app)
+  await app.keyboard.press("shift+tab")
+  await expectTyping(app, "event-notes")
+})
+
+test("tab and shift+tab wrap round an open event", async () => {
+  const app = await opened()
+  await openOwnEvent(app)
+  // Title, back to More options, back round to the notes.
+  await app.keyboard.press("tab")
+  await app.keyboard.press("shift+tab")
+  await app.keyboard.press("shift+tab")
+  await expectTyping(app, "event-notes")
+  // On from the notes, round to More options.
+  await app.keyboard.press("tab")
+  await app.keyboard.press("enter")
+  await app.waitFor("Duplicate event")
 })
 
 test("the day rolls over at midnight", async () => {

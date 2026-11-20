@@ -2,12 +2,12 @@ import {
   cleanup,
   createMotion,
   effect,
-  type InputRef,
   type JSX,
   keymap,
   Overlay,
   Scroll,
   signal,
+  untracked,
   windowSize,
 } from "nsh"
 
@@ -25,6 +25,7 @@ import { noteDismissed, overlaysFocused, popoverAnchor } from "@/stores/popover"
 import { requestSave } from "@/stores/recurrence"
 
 import { EditEvent } from "./EditEvent"
+import { PopupStops, STOP_PLACE, type Stop } from "./popup-stops"
 
 /**
  * The box of both event popovers. They open at a place, not at a trigger, which
@@ -34,18 +35,50 @@ export function EventPopup(props: {
   /** Its name and file, for annotate mode. */
   name: string
   source: string
-  /** Where Tab from outside goes, as `data-popover-entry` was. */
-  entry?: () => InputRef | null
   onDismiss: (reason: "pressOutside" | "cancel") => void
   children?: JSX.Element
 }) {
   const motion = createMotion({ enter: "zoomIn", duration: 100 })
-  // GTK's Tab order doesn't put the popover after the calendar's focus, and
-  // reaches "More options" before the title: Tab from outside goes in here.
+  const stops = signal<{ place: number; stop: Stop }[]>([])
+  const focused = signal<number | null>(null)
+  const registry: PopupStops = {
+    add: (place, stop) => {
+      untracked(() => stops.update((list) => [...list, { place, stop }]))
+      return () =>
+        untracked(() => {
+          stops.update((list) => list.filter((entry) => entry.stop !== stop))
+          if (focused() === place) focused.set(null)
+        })
+    },
+    setFocused: (place, on) =>
+      untracked(() => {
+        if (on) focused.set(place)
+        else if (focused() === place) focused.set(null)
+      }),
+  }
+  // GTK's Tab order doesn't put the popover after the calendar's focus, reaches
+  // "More options" before the title, and leaves the popover at either end: Tab
+  // from outside goes to the title, Shift+Tab to the end, and both wrap round.
   effect(() => {
-    const entry = props.entry?.()
-    if (!entry || overlaysFocused() || calendarCovered()) return
-    cleanup(keymap.bind("tab", () => entry.focus(), { when: "notEditing" }))
+    const list = [...stops()].sort((a, b) => a.place - b.place)
+    const first = list[0]
+    const last = list[list.length - 1]
+    if (!first || !last || calendarCovered()) return
+    if (!overlaysFocused()) {
+      const entry = list.find((entry) => entry.place === STOP_PLACE.title) ?? first
+      cleanup(
+        keymap.bind(
+          { tab: () => entry.stop.focus(), "shift+tab": () => last.stop.focus() },
+          { when: "notEditing" },
+        ),
+      )
+      return
+    }
+    const at = focused()
+    const keys: Record<string, () => void> = {}
+    if (at === first.place) keys["shift+tab"] = () => last.stop.focus()
+    if (at === last.place) keys.tab = () => first.stop.focus()
+    if (Object.keys(keys).length) cleanup(keymap.bind(keys, { when: "always" }))
   })
   return (
     <Overlay
@@ -62,7 +95,7 @@ export function EventPopup(props: {
       onCancel={() => !annotating() && props.onDismiss("cancel")}
     >
       <Scroll class="min-h-0 shrink" scrollbar={false}>
-        {props.children}
+        <PopupStops.Provider value={registry}>{props.children}</PopupStops.Provider>
       </Scroll>
     </Overlay>
   )
@@ -81,22 +114,16 @@ export function PopoverEditEvent() {
 }
 
 function EditPopup(props: { event: () => CalendarEvent }) {
-  const summary = signal<InputRef | null>(null)
   return (
     <EventPopup
       name="Event popover"
       source="components/event-parts/PopoverEditEvent.tsx"
-      entry={summary}
       onDismiss={(reason) => {
         if (reason === "pressOutside") noteDismissed(eventKey(props.event()))
         setActiveEventKey(null)
       }}
     >
-      <EditEvent
-        event={props.event()}
-        summaryRef={(input) => summary.set(input)}
-        onRequestSave={requestSave}
-      />
+      <EditEvent event={props.event()} onRequestSave={requestSave} />
     </EventPopup>
   )
 }

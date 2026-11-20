@@ -1,4 +1,4 @@
-import { type InputRef, type JSX, View } from "nsh"
+import { type JSX, View } from "nsh"
 import type { RRule, RRuleSet } from "rrule"
 
 import { Textarea } from "@/components/ui/textarea"
@@ -27,8 +27,51 @@ import { RepeatSelect } from "./inputs/RepeatSelect"
 import { RsvpBar } from "./inputs/RsvpBar"
 import { RsvpSelect } from "./inputs/RsvpSelect"
 import { UrlInput } from "./inputs/UrlInput"
+import { popupStop, STOP_PLACE } from "./popup-stops"
 
 const Separator = () => <View class="h-px bg-border opacity-75" />
+
+function Title(props: {
+  value?: string | null
+  readonly?: boolean
+  autoFocus?: boolean
+  onChange: (summary: string) => void
+  onSubmit: () => void
+}) {
+  const stop = popupStop(STOP_PLACE.title)
+  return (
+    <Textarea
+      {...stop}
+      autoFocus={props.autoFocus}
+      testID="event-summary"
+      placeholder="Event Title"
+      value={props.value ?? ""}
+      class={cn(typography.bodyLg(), "font-medium")}
+      readonly={props.readonly}
+      submitBehavior="submit"
+      onChange={({ value }) => props.onChange(value)}
+      onSubmit={() => props.onSubmit()}
+    />
+  )
+}
+
+function Notes(props: {
+  value?: string | null
+  readonly?: boolean
+  onChange: (notes: string) => void
+}) {
+  const stop = popupStop(STOP_PLACE.notes)
+  return (
+    <NotesInput
+      inputRef={stop.ref}
+      onFocus={stop.onFocus}
+      onBlur={stop.onBlur}
+      value={props.value}
+      onChange={props.onChange}
+      readOnly={props.readonly}
+    />
+  )
+}
 
 function Section(props: { flushTop?: boolean; flushBottom?: boolean; children?: JSX.Element }) {
   return (
@@ -40,7 +83,6 @@ function Section(props: { flushTop?: boolean; flushBottom?: boolean; children?: 
 
 export function EventInfo(props: {
   readonly?: boolean
-  summaryRef?: (ref: InputRef) => void
   /** Focus the title once it's on screen; `focus()` before that does nothing on Linux. */
   autoFocusSummary?: boolean
   summary?: string | null
@@ -98,16 +140,11 @@ export function EventInfo(props: {
       <If when={showSummary()}>
         <Section flushTop>
           <View class="min-h-(--control-height) justify-center">
-            <Textarea
-              ref={(input) => props.summaryRef?.(input)}
-              autoFocus={props.autoFocusSummary}
-              testID="event-summary"
-              placeholder="Event Title"
-              value={props.summary ?? ""}
-              class={cn(typography.bodyLg(), "font-medium")}
+            <Title
+              value={props.summary}
               readonly={props.readonly}
-              submitBehavior="submit"
-              onChange={({ value }) => props.onChangeSummary(value)}
+              autoFocus={props.autoFocusSummary}
+              onChange={props.onChangeSummary}
               onSubmit={() => props.onClose?.()}
             />
           </View>
@@ -222,10 +259,10 @@ export function EventInfo(props: {
             readOnly={props.readonly}
           />
           <If when={canEdit() || !!props.description?.trim()}>
-            <NotesInput
+            <Notes
               value={props.description}
+              readonly={props.readonly}
               onChange={props.onDescriptionChange}
-              readOnly={props.readonly}
             />
           </If>
         </View>

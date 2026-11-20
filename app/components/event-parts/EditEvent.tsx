@@ -1,4 +1,5 @@
-import { cleanup, type InputRef, keymap, type JSX, signal, Text, token, untracked, View } from "nsh"
+import { cleanup, keymap, type JSX, signal, Text, token, untracked, View } from "nsh"
+import { FocusWatch } from "rencal/native"
 import type { RRule, RRuleSet } from "rrule"
 
 import { Button } from "@/components/ui/button"
@@ -31,24 +32,34 @@ import { requestSync } from "@/stores/sync"
 import { typography } from "@/themes"
 
 import { EventInfo } from "./EventInfo"
+import { popupStop, STOP_PLACE } from "./popup-stops"
 
 function OverflowMenu(props: { onDuplicate: () => void; onDelete: () => void }) {
+  // The button takes no focus handlers: the watch hears it.
+  const stop = popupStop(STOP_PLACE.menu)
   return (
-    <Menu
-      placement="bottom"
-      align="end"
-      trigger={
-        <Button variant="ghost" size="icon-xs" accessibilityLabel="More options">
-          <MoreHorizIcon color={token("foreground")} />
-        </Button>
-      }
-    >
-      <MenuItem onSelect={props.onDuplicate} class="justify-between gap-4">
-        <Text class={cn(typography.body(), "text-foreground")}>Duplicate event</Text>
-        <Text class={cn(typography.caption(), "text-muted-foreground")}>D</Text>
-      </MenuItem>
-      <MenuItem label="Delete event" destructive onSelect={props.onDelete} />
-    </Menu>
+    <FocusWatch onFocusIn={stop.onFocus} onFocusOut={stop.onBlur}>
+      <Menu
+        placement="bottom"
+        align="end"
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            accessibilityLabel="More options"
+            viewRef={stop.ref}
+          >
+            <MoreHorizIcon color={token("foreground")} />
+          </Button>
+        }
+      >
+        <MenuItem onSelect={props.onDuplicate} class="justify-between gap-4">
+          <Text class={cn(typography.body(), "text-foreground")}>Duplicate event</Text>
+          <Text class={cn(typography.caption(), "text-muted-foreground")}>D</Text>
+        </MenuItem>
+        <MenuItem label="Delete event" destructive onSelect={props.onDelete} />
+      </Menu>
+    </FocusWatch>
   )
 }
 
@@ -58,7 +69,6 @@ function OverflowMenu(props: { onDuplicate: () => void; onDelete: () => void }) 
  */
 export function EditEvent(props: {
   event: CalendarEvent
-  summaryRef?: (ref: InputRef) => void
   onRequestSave: (current: CalendarEvent, original: CalendarEvent) => void
   children?: JSX.Element
 }) {
@@ -143,7 +153,6 @@ export function EditEvent(props: {
 
       <EventInfo
         readonly={isReadonly()}
-        summaryRef={(input) => props.summaryRef?.(input)}
         summary={dirty().summary}
         onChangeSummary={(summary) => update({ summary })}
         description={dirty().description}

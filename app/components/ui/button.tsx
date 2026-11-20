@@ -66,6 +66,7 @@ export function Button(props: {
   testID?: string
   /** Focused once the dialog it's in has opened, so Return presses it. */
   autoFocus?: boolean
+  viewRef?: (ref: ViewRef) => void
   onPress?: () => void
   children?: JSX.Element
 }) {
@@ -77,7 +78,10 @@ export function Button(props: {
   })
   return (
     <BaseButton
-      ref={ref}
+      ref={(view) => {
+        ref = view
+        props.viewRef?.(view)
+      }}
       onPress={props.onPress}
       disabled={props.disabled}
       accessibilityLabel={props.accessibilityLabel}

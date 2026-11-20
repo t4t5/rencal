@@ -15,10 +15,17 @@ export function BlurOnPressOutside(props: {
   anchor: ViewRef | undefined
   blur: () => void
 }) {
+  // Mounted for as long as the field, not just while `when`: an overlay mounted
+  // beside a field as it takes the focus replaces the field's native view, and
+  // the focus drops (Tab into an `InputGroup` field, on Linux).
   return (
-    <If when={props.when && props.anchor}>
+    <If when={props.anchor}>
       {/* Draws nothing: it's how to hear a press outside the field. */}
-      <Overlay anchor={props.anchor} class="size-0" onPressOutside={() => props.blur()} />
+      <Overlay
+        anchor={props.anchor}
+        class="size-0"
+        onPressOutside={() => props.when && props.blur()}
+      />
     </If>
   )
 }
