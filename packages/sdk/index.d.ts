@@ -108,6 +108,15 @@ export interface EventDay {
 }
 /** One entry for each day in [start, end), including days without events. */
 export declare function eventsByDay(events: readonly CalendarEvent[], start: Temporal.PlainDate, end: Temporal.PlainDate): EventDay[];
+/** Shares a per-zone width preference and reserves space for the calendar. */
+export declare function useTimeZoneGutter(zoneCount: number, available: number, reserved: number): {
+	width: number;
+	min: number;
+	max: number;
+	resize: (value: number) => void;
+};
+/** Draggable and keyboard-operable divider on the calendar side of the gutter. */
+export declare function TimeZoneDivider({ width, min, max, resize }: ReturnType<typeof useTimeZoneGutter>): import("react/jsx-runtime").JSX.Element;
 type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
 type ClassDictionary = Record<string, any>;
 type ClassArray = ClassValue[];

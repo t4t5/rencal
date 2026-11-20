@@ -22,14 +22,15 @@ import { WeekAllDayBar } from "./AllDayEventBlock"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
-import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
+import { GRID_HEIGHT, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
-import { useGutterZones } from "./useGutterZones"
 import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
 import { type GutterZone, hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
 
 type WeekTimeGridProps = {
   span: Span
+  gutterWidth: number
+  zones: GutterZone[]
   /** The first day of the scroll track; `days` start `startIndex` days after it. */
   origin: Temporal.PlainDate
   startIndex: number
@@ -42,6 +43,8 @@ type WeekTimeGridProps = {
 
 export function WeekTimeGrid({
   span,
+  gutterWidth,
+  zones,
   origin,
   startIndex,
   days,
@@ -54,8 +57,6 @@ export function WeekTimeGrid({
   const { timeFormat, firstDayOfWeek } = useDisplaySettings()
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
-  const zones = useGutterZones()
-  const gutterWidth = zones.length * GUTTER_WIDTH
 
   const activeDateKey = activeDate.toString()
   // A day on its own is always the active one, so marking it selected says nothing.
@@ -71,12 +72,15 @@ export function WeekTimeGrid({
   // Preserve the visible day offset after the new track widths reach the DOM.
   const didInitialScrollRef = useRef(false)
   const previousDayWidthRef = useRef(dayWidth)
+  const anchor = useRef({ day: 0, left: -1 })
   useLayoutEffect(() => {
     const previousWidth = previousDayWidthRef.current
     previousDayWidthRef.current = dayWidth
     const el = scrollContainerRef.current
     if (el && didInitialScrollRef.current && previousWidth !== dayWidth) {
-      el.scrollLeft = (el.scrollLeft / previousWidth) * dayWidth
+      if (el.scrollLeft !== anchor.current.left) anchor.current.day = el.scrollLeft / previousWidth
+      el.scrollLeft = anchor.current.day * dayWidth
+      anchor.current.left = el.scrollLeft
     }
   }, [dayWidth, scrollContainerRef])
 
@@ -142,6 +146,7 @@ export function WeekTimeGrid({
       style={
         {
           "--week-hour-height": `${HOUR_HEIGHT}px`,
+          "--week-zone-width": `${gutterWidth / zones.length}px`,
           "--week-gutter-width": `${gutterWidth}px`,
         } as CSSProperties
       }
@@ -299,7 +304,7 @@ function TimeGutter({
           data-slot="week-time-zone"
           data-local={local || undefined}
           className="relative"
-          style={{ width: GUTTER_WIDTH }}
+          style={{ width: "var(--week-zone-width)" }}
         >
           {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
             <span
@@ -336,7 +341,7 @@ function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.Plain
               "h-7.5 pr-1 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none",
               !local && "opacity-70",
             )}
-            style={{ width: GUTTER_WIDTH }}
+            style={{ width: "var(--week-zone-width)" }}
           >
             <Tooltip content={zoneDescription(tzid, date)} side="bottom">
               {local ? (

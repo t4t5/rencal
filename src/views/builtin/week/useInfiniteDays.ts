@@ -166,31 +166,24 @@ export function useInfiniteDays({
 }
 
 /** Day column width: the span's days fill the viewport right of the gutter, never under DAY_WIDTH_MIN. */
-const DAY_WIDTH_MIN = 100
+export const DAY_WIDTH_MIN = 100
 
-export function useDayWidth(
-  scrollContainerRef: RefObject<HTMLDivElement | null>,
-  span: Span,
-  gutterWidth: number,
-): {
-  dayWidth: number
-  measured: boolean
-} {
-  const [dayWidth, setDayWidth] = useState(180)
-  const [measured, setMeasured] = useState(false)
-
+/** Measures the usable viewport shared by the gutter and the day columns. */
+export function useViewportWidth(scrollContainerRef: RefObject<HTMLDivElement | null>) {
+  const [width, setWidth] = useState<number | null>(null)
   useLayoutEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
-    const update = () => {
-      setDayWidth(Math.max(DAY_WIDTH_MIN, (el.clientWidth - gutterWidth) / VISIBLE_DAYS[span]))
-      setMeasured(true)
-    }
+    const update = () => setWidth(el.clientWidth)
     update()
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [scrollContainerRef, span, gutterWidth])
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [scrollContainerRef])
+  return width
+}
 
-  return { dayWidth, measured }
+/** Distributes the remaining viewport width across the visible days. */
+export function dayColumnWidth(viewport: number, gutter: number, span: Span) {
+  return Math.max(DAY_WIDTH_MIN, (viewport - gutter) / VISIBLE_DAYS[span])
 }

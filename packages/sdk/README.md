@@ -5,7 +5,7 @@ Build view plugins for [renCal](https://rencal.org). A view is a React component
 ## Setup
 
 ```sh
-pnpm add -D @rencomputer/rencal-sdk @types/react @types/react-dom
+pnpm add -D @rencomputer/rencal-sdk@0.5.0 @types/react @types/react-dom
 ```
 
 Add the scripts to `package.json`:
@@ -33,7 +33,7 @@ Views are declared in the plugin's `rencal-plugin.toml`:
 id = "alice.upcoming"
 name = "Upcoming"
 description = "The next seven days as a list."
-min_rencal_version = "0.9.3"
+min_rencal_version = "0.10.1"
 
 [[contributes.views]]
 id = "upcoming"

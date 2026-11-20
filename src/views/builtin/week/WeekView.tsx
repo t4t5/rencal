@@ -1,12 +1,19 @@
 import { useRef } from "react"
 
-import { useEventsInRange, useNavigation } from "@/sdk"
+import { TimeZoneDivider, useTimeZoneGutter, useEventsInRange, useNavigation } from "@/sdk"
 
 import { WeekTimeGrid } from "./WeekTimeGrid"
 import { useDayRangeLayout } from "./useDayRangeLayout"
-import { useGutterWidth } from "./useGutterZones"
-import { type Span, useDayWidth, useInfiniteDays } from "./useInfiniteDays"
+import { useGutterZones } from "./useGutterZones"
+import {
+  DAY_WIDTH_MIN,
+  dayColumnWidth,
+  type Span,
+  useViewportWidth,
+  useInfiniteDays,
+} from "./useInfiniteDays"
 
+/** Displays a full week on the shared time grid. */
 export function WeekView() {
   return <TimeGridView span="week" />
 }
@@ -19,8 +26,11 @@ export function DayView() {
 function TimeGridView({ span }: { span: Span }) {
   const { activeDate } = useNavigation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const gutterWidth = useGutterWidth()
-  const { dayWidth, measured } = useDayWidth(scrollContainerRef, span, gutterWidth)
+  const zones = useGutterZones()
+  const viewport = useViewportWidth(scrollContainerRef)
+  const gutter = useTimeZoneGutter(zones.length, viewport ?? Infinity, DAY_WIDTH_MIN)
+  const gutterWidth = gutter.width
+  const dayWidth = viewport === null ? 180 : dayColumnWidth(viewport, gutterWidth, span)
   const { origin, startIndex, days, start, end } = useInfiniteDays({
     scrollContainerRef,
     activeDate,
@@ -39,10 +49,13 @@ function TimeGridView({ span }: { span: Span }) {
         startIndex={startIndex}
         days={days}
         dayWidth={dayWidth}
-        dayWidthMeasured={measured}
+        dayWidthMeasured={viewport !== null}
+        gutterWidth={gutterWidth}
+        zones={zones}
         layout={layout}
         scrollContainerRef={scrollContainerRef}
       />
+      <TimeZoneDivider {...gutter} />
     </div>
   )
 }
