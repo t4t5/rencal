@@ -22,6 +22,8 @@ mod notifications;
 mod oauth;
 mod omarchy;
 mod plugin_fonts;
+#[cfg(target_os = "linux")]
+mod plugin_view;
 pub mod plugins;
 mod routes;
 mod signal;
@@ -70,6 +72,13 @@ static ROUTER: OnceLock<Result<Arc<Router>, String>> = OnceLock::new();
 #[native_module("rencal/native")]
 fn native(registry: &mut Registry) {
     registry.module::<Backend>().register::<FocusWatch>();
+}
+
+/// The crate's GTK components: `rencal.plugin-view` (`plugin_view.rs`).
+#[cfg(target_os = "linux")]
+#[native_components(linux)]
+fn components(components: &nsh_platform_linux::Components) {
+    plugin_view::register(components);
 }
 
 /// Providers shipped with this build: next to the binary when packaged, where

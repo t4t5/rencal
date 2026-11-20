@@ -1693,8 +1693,10 @@ impl PluginManager {
             }
         }
         for view in &package.manifest.contributes.views {
-            if seen.insert(view.script.as_str()) {
-                files.push((view.script.as_str(), PackageFile::Script));
+            for script in view.script.iter().chain(&view.bundle) {
+                if seen.insert(script.as_str()) {
+                    files.push((script.as_str(), PackageFile::Script));
+                }
             }
             if let Some(css) = &view.css
                 && seen.insert(css.as_str())
@@ -2181,13 +2183,15 @@ fn release_asset(
     }))
 }
 
-/// Each view's `script` and `css` path, in manifest order.
+/// Each view's `script`, `bundle` and `css` path, in manifest order.
 fn view_files(manifest: &PluginManifest) -> impl Iterator<Item = &str> {
-    manifest
-        .contributes
-        .views
-        .iter()
-        .flat_map(|view| std::iter::once(view.script.as_str()).chain(view.css.as_deref()))
+    manifest.contributes.views.iter().flat_map(|view| {
+        view.script
+            .as_deref()
+            .into_iter()
+            .chain(view.bundle.as_deref())
+            .chain(view.css.as_deref())
+    })
 }
 
 /// Match view files to the release assets of the same file name. Files without

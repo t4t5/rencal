@@ -3,10 +3,10 @@
  *
  * QuickJS has no Temporal, and its Intl knows only the device's zone and UTC,
  * so the polyfill can't run. Calendar math is plain ISO arithmetic here; named
- * zones come from chrono-tz through `Backend`. `nsh.json` aliases the polyfill
- * to this file, so `src/lib` imports it unchanged.
+ * zones come from chrono-tz through `Backend` (`./native-zones`). `nsh.json`
+ * aliases the polyfill to this file, so `src/lib` imports it unchanged.
  */
-import { Backend } from "rencal/native"
+import { nativeZones } from "./native-zones"
 
 const MS_PER_DAY = 86_400_000
 
@@ -161,7 +161,7 @@ function zoneOffsetMs(zone: string, epochMs: number): number {
   if (zone === "UTC") return 0
   const fixed = /^[+-]/.test(zone) ? parseOffsetMs(zone) : null
   if (fixed !== null) return fixed
-  const offset = Backend.zoneOffsetMs(zone, epochMs)
+  const offset = nativeZones().zoneOffsetMs(zone, epochMs)
   if (offset === null) throw new RangeError(`unknown time zone: ${zone}`)
   return offset
 }
@@ -170,7 +170,7 @@ function zoneOffsetMs(zone: string, epochMs: number): number {
 function localToEpochMs(zone: string, localMs: number): number {
   if (zone === "UTC") return localMs
   if (/^[+-]/.test(zone)) return localMs - zoneOffsetMs(zone, 0)
-  const instants = Backend.zoneInstantsMs(zone, localMs)
+  const instants = nativeZones().zoneInstantsMs(zone, localMs)
   if (instants.length > 0) return Math.min(...instants)
   return localMs - zoneOffsetMs(zone, localMs - MS_PER_DAY)
 }
@@ -776,7 +776,7 @@ class ZonedDateTimeValue {
 }
 
 const zonedNow = (zone?: string) =>
-  new ZonedDateTimeValue(nowMs(), assertZone(zone ?? Backend.systemZone()))
+  new ZonedDateTimeValue(nowMs(), assertZone(zone ?? nativeZones().systemZone()))
 
 export const Temporal = {
   Duration: DurationValue,
@@ -787,7 +787,7 @@ export const Temporal = {
   ZonedDateTime: ZonedDateTimeValue,
   Now: {
     instant: () => new InstantValue(nowMs()),
-    timeZoneId: () => Backend.systemZone(),
+    timeZoneId: () => nativeZones().systemZone(),
     zonedDateTimeISO: (zone?: string) => zonedNow(zone),
     plainDateISO: (zone?: string) => zonedNow(zone).toPlainDate(),
     plainDateTimeISO: (zone?: string) => zonedNow(zone).toPlainDateTime(),

@@ -88,8 +88,14 @@ impl ProviderContribution {
 pub struct ViewContribution {
     pub id: String,
     pub name: String,
-    /// A single-file ES module whose default export is the view component.
-    pub script: String,
+    /// A single-file ES module whose default export is the view component:
+    /// the React view of renCal up to v0.9.
+    #[serde(default)]
+    pub script: Option<String>,
+    /// The NSH view: the `bundle.js` that `nsh build` writes, run in an engine
+    /// of its own.
+    #[serde(default)]
+    pub bundle: Option<String>,
     /// Styles the view needs, injected while the plugin is installed.
     #[serde(default)]
     pub css: Option<String>,
@@ -247,7 +253,15 @@ pub fn validate_manifest(
             &format!("view {:?} name", view.id),
             MAX_NAME_LENGTH,
         )?;
-        validate_script_path(&view.script)?;
+        if view.script.is_none() && view.bundle.is_none() {
+            return Err(PluginError::new(format!(
+                "view {:?} needs a script or a bundle",
+                view.id
+            )));
+        }
+        for path in view.script.iter().chain(&view.bundle) {
+            validate_script_path(path)?;
+        }
         if let Some(css) = &view.css {
             validate_css_path(css)?;
         }
@@ -811,7 +825,8 @@ css = "dist/board.css"
             [ViewContribution {
                 id: "board".into(),
                 name: "Board".into(),
-                script: "dist/board.js".into(),
+                script: Some("dist/board.js".into()),
+                bundle: None,
                 css: Some("dist/board.css".into()),
             }]
         );
@@ -819,6 +834,31 @@ css = "dist/board.css"
         let minimal = VIEW.replacen("css = \"dist/board.css\"\n", "", 1);
         let manifest = validate_manifest(&provider_only(&minimal), None).unwrap();
         assert_eq!(manifest.contributes.views[0].css, None);
+    }
+
+    #[test]
+    fn accepts_views_with_only_an_nsh_bundle() {
+        let bundle_only = VIEW.replacen(
+            "script = \"dist/board.js\"",
+            "bundle = \"dist/board.nsh.js\"",
+            1,
+        );
+        let manifest = validate_manifest(&provider_only(&bundle_only), None).unwrap();
+        let view = &manifest.contributes.views[0];
+        assert_eq!(view.script, None);
+        assert_eq!(view.bundle.as_deref(), Some("dist/board.nsh.js"));
+    }
+
+    #[test]
+    fn requires_a_script_or_a_bundle() {
+        assert!(
+            view_error("script = \"dist/board.js\"\n", "")
+                .contains("view \"board\" needs a script or a bundle")
+        );
+        assert!(
+            view_error("script = \"dist/board.js\"", "bundle = \"../board.js\"")
+                .contains("must be a relative .js path")
+        );
     }
 
     #[test]

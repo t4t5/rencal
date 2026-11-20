@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Popover } from "@/components/ui/popover"
 import { Select } from "@/components/ui/select"
 
+import { calendarPrefs } from "@/lib/calendar-prefs"
 import {
   epochDay,
   formatMonth,
@@ -16,8 +17,6 @@ import {
 import { cn } from "@/lib/utils"
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@/icons"
-import { currentDay } from "@/stores/clock"
-import { firstDayOfWeek, showWeekNumbers } from "@/stores/settings"
 import { typography } from "@/themes"
 
 // Indexed by day number, 0 = Sunday.
@@ -33,7 +32,7 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => ({
 }))
 
 function yearItems(shown: number) {
-  const now = currentDay().year
+  const now = calendarPrefs().today().year
   const from = Math.min(now - YEARS_AROUND, shown)
   const to = Math.max(now + YEARS_AROUND, shown)
   return Array.from({ length: to - from + 1 }, (_, i) => ({
@@ -42,7 +41,8 @@ function yearItems(shown: number) {
   }))
 }
 
-const weekdayIndex = (column: number) => (firstDayOfWeek() === "sunday" ? column : (column + 1) % 7)
+const weekdayIndex = (column: number) =>
+  calendarPrefs().firstDayOfWeek() === "sunday" ? column : (column + 1) % 7
 
 function Day(props: {
   day: () => number
@@ -52,7 +52,7 @@ function Day(props: {
 }) {
   const date = () => plainDateFromEpochDay(props.day())
   const selected = () => props.day() === props.selected()
-  const isToday = () => props.day() === epochDay(currentDay())
+  const isToday = () => props.day() === epochDay(calendarPrefs().today())
   const outside = () => date().month !== props.month()
   return (
     <View
@@ -85,7 +85,7 @@ function MonthCalendar(props: {
 }) {
   // The content is made on each opening, so it starts on the picked date's month.
   const shown = signal(props.selected.with({ day: 1 }))
-  const gridStart = () => epochDay(startOfWeek(shown(), firstDayOfWeek()))
+  const gridStart = () => epochDay(startOfWeek(shown(), calendarPrefs().firstDayOfWeek()))
   const selectedDay = () => epochDay(props.selected)
   const shift = (months: number) => shown.set(shown().add({ months }))
 
@@ -130,7 +130,7 @@ function MonthCalendar(props: {
         </Button>
       </View>
       <View class="flex-row pb-1">
-        <If when={showWeekNumbers()}>
+        <If when={calendarPrefs().showWeekNumbers()}>
           <View class="w-8" />
         </If>
         <Each of={COLUMNS}>
@@ -148,10 +148,13 @@ function MonthCalendar(props: {
           const firstDay = () => gridStart() + week() * 7
           return (
             <View class="flex-row">
-              <If when={showWeekNumbers()}>
+              <If when={calendarPrefs().showWeekNumbers()}>
                 <View class="w-8 items-center justify-center">
                   <Text class={cn(typography.numericalSm(), "text-muted-foreground")}>
-                    {isoWeekNumber(plainDateFromEpochDay(firstDay()), firstDayOfWeek())}
+                    {isoWeekNumber(
+                      plainDateFromEpochDay(firstDay()),
+                      calendarPrefs().firstDayOfWeek(),
+                    )}
                   </Text>
                 </View>
               </If>

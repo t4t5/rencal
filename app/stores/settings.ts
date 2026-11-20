@@ -4,9 +4,10 @@ import { computed, signal } from "nsh"
 import { api, type CaldirSettings } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
 import type { CalendarGroups } from "@/lib/calendar-groups"
+import { provideCalendarPrefs } from "@/lib/calendar-prefs"
 import { type FirstDayOfWeek, normalizeExtraTimeZones, type TimeFormat } from "@/lib/event-time"
 
-import { viewerTzid } from "@/stores/clock"
+import { currentDay, viewerTzid } from "@/stores/clock"
 
 const firstDay = signal<FirstDayOfWeek>("monday")
 const timeFormatValue = signal<TimeFormat>("24h")
@@ -37,6 +38,8 @@ export const defaultReminders = () => defaultReminderList()
 export const autoSyncEnabled = () => autoSync()
 export const notificationsEnabled = () => notifications()
 export const calendarDir = () => calendarDirValue()
+
+provideCalendarPrefs({ today: currentDay, firstDayOfWeek, showWeekNumbers })
 
 async function refreshConfig() {
   const [day, numbers, zones, loadedGroups, sync, notify] = await Promise.all([

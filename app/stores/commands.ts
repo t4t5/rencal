@@ -57,7 +57,7 @@ import {
   toggleSidebar,
 } from "@/stores/view"
 import { activeTheme, cycleTheme, pickTheme, themeDescriptors } from "@/themes/controller"
-import { viewBindings, VIEWS } from "@/views/manifest"
+import { viewBindings, views } from "@/views/manifest"
 
 const NAV_THROTTLE_MS = 80
 
@@ -89,7 +89,7 @@ const userEntries = signal<readonly UserKeyBinding[]>([])
 const fileError = signal<string | null>(null)
 const keystrokeErrors = signal<readonly string[]>([])
 
-export const defaultBindings = computed(() => [...viewBindings(VIEWS), ...DEFAULT_BINDINGS])
+export const defaultBindings = computed(() => [...viewBindings(views()), ...DEFAULT_BINDINGS])
 const resolved = computed(() => resolveBindings(defaultBindings(), userEntries()))
 
 export const bindings = (): readonly Binding[] => resolved().bindings
@@ -125,7 +125,7 @@ export function loadKeyBindings() {
 
 export const commandValues = computed(
   (): CommandValues => ({
-    "view.switch": VIEWS.map((view) => ({
+    "view.switch": views().map((view) => ({
       value: view.id,
       label: `Display ${view.name.toLowerCase()} view`,
     })),

@@ -1,5 +1,5 @@
-//! View plugins: the scripts and styles of installed plugin views. The frontend
-//! imports each script as a module and registers its default export as a view.
+//! View plugins: the NSH bundles of installed plugin views, each run in an
+//! engine of its own by `rencal.plugin-view` (`plugin_view.rs`).
 
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -12,8 +12,9 @@ pub struct ExternalView {
     pub id: String,
     pub plugin_id: String,
     pub name: String,
-    pub script: String,
-    pub css: Option<String>,
+    /// The absolute path of the view's NSH bundle; `None` for a view with
+    /// only a React script, which this renCal can't run.
+    pub bundle: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Type)]
@@ -32,8 +33,7 @@ fn scan_from(plugins_dir: &std::path::Path) -> ExternalViewsSnapshot {
                 id: view.id,
                 plugin_id: package.id.clone(),
                 name: view.name,
-                script: view.script,
-                css: view.css,
+                bundle: view.bundle.map(|path| path.to_string_lossy().into_owned()),
             })
         })
         .collect();
@@ -60,17 +60,16 @@ min_rencal_version = "0.8.0"
 id = "board"
 name = "Board"
 script = "dist/board.js"
-css = "dist/board.css"
+bundle = "dist/board.nsh.js"
 "#;
 
     #[test]
-    fn scans_installed_view_scripts_and_styles() {
+    fn scans_installed_view_bundles() {
         let temp = tempfile::tempdir().unwrap();
         let package = temp.path().join("alice.board");
         std::fs::create_dir_all(package.join("dist")).unwrap();
         std::fs::write(package.join("rencal-plugin.toml"), MANIFEST).unwrap();
-        std::fs::write(package.join("dist/board.js"), "export default () => null").unwrap();
-        std::fs::write(package.join("dist/board.css"), ".board {}").unwrap();
+        std::fs::write(package.join("dist/board.nsh.js"), "mount(() => null)").unwrap();
 
         let snapshot = scan_from(temp.path());
 
@@ -78,12 +77,26 @@ css = "dist/board.css"
         let view = &snapshot.views[0];
         assert_eq!(view.id, "alice.board/board");
         assert_eq!(view.plugin_id, "alice.board");
-        assert_eq!(view.script, "export default () => null");
-        assert_eq!(view.css.as_deref(), Some(".board {}"));
+        let bundle = package.join("dist/board.nsh.js");
+        assert_eq!(view.bundle.as_deref(), Some(bundle.to_str().unwrap()));
     }
 
     #[test]
-    fn skips_packages_with_a_missing_script() {
+    fn keeps_react_only_views_without_a_bundle() {
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.board");
+        std::fs::create_dir_all(&package).unwrap();
+        let manifest = MANIFEST.replace("bundle = \"dist/board.nsh.js\"\n", "");
+        std::fs::write(package.join("rencal-plugin.toml"), manifest).unwrap();
+
+        let snapshot = scan_from(temp.path());
+
+        assert_eq!(snapshot.views.len(), 1);
+        assert!(snapshot.views[0].bundle.is_none());
+    }
+
+    #[test]
+    fn skips_packages_with_a_missing_bundle() {
         let temp = tempfile::tempdir().unwrap();
         let package = temp.path().join("alice.board");
         std::fs::create_dir_all(&package).unwrap();

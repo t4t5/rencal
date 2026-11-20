@@ -1,5 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { Backend } from "rencal/native"
+
+import { nativeZones } from "@/lib/native-zones"
 
 import { instantForOrdering } from "./projections"
 import type { EventTime } from "./types"
@@ -24,13 +25,13 @@ export function normalizeExtraTimeZones(zones: readonly string[]): string[] {
 
 /** The tz database's abbreviation of `tzid` at `epochMs` ("EST"), or its offset where it has none ("+0530"). */
 export const timeZoneAbbreviation = (tzid: string, epochMs: number): string =>
-  Backend.zoneAbbreviation(tzid, epochMs) ?? tzid
+  nativeZones().zoneAbbreviation(tzid, epochMs) ?? tzid
 
 let cachedTimeZones: string[] | undefined
 
 export function listTimeZones(): string[] {
   if (!cachedTimeZones) {
-    const zones = Backend.zones()
+    const zones = nativeZones().zones()
     cachedTimeZones = [...zones.filter((z) => z.includes("/") && !z.startsWith("Etc/")), "UTC"]
   }
   return cachedTimeZones

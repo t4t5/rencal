@@ -3,7 +3,7 @@ import { View } from "nsh"
 import { inspectable } from "@/lib/inspect"
 
 import { calendarView } from "@/stores/view"
-import { VIEWS } from "@/views/manifest"
+import { views } from "@/views/manifest"
 
 import { MainHeader } from "./MainHeader"
 
@@ -11,7 +11,7 @@ export function Main() {
   return (
     <View class="flex-1 min-w-0">
       <MainHeader />
-      <Each of={VIEWS} key={(view) => view.id}>
+      <Each of={views()} key={(view) => view.id}>
         {(view) => (
           <If when={calendarView() === view().id}>
             <View

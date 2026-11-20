@@ -176,8 +176,11 @@ export type ExternalView = {
   id: string
   plugin_id: string
   name: string
-  script: string
-  css: string | null
+  /**
+   * The absolute path of the view's NSH bundle; `null` for a view with
+   * only a React script, which this renCal can't run.
+   */
+  bundle: string | null
 }
 
 export type ExternalViewsSnapshot = { views: ExternalView[] }

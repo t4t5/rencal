@@ -513,8 +513,9 @@ pub struct ScannedView {
     /// `<package-id>/<view-id>`.
     pub id: String,
     pub name: String,
-    pub script: String,
-    pub css: Option<String>,
+    /// The view's NSH bundle; `None` for a view with only a React script,
+    /// which this renCal can't run.
+    pub bundle: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -635,11 +636,23 @@ fn scan_package(
 
     let mut views = Vec::with_capacity(manifest.contributes.views.len());
     for view in manifest.contributes.views {
+        let bundle = match &view.bundle {
+            Some(path) => {
+                let path = directory.join(path);
+                if !path.is_file() {
+                    return Err(PluginError::new(format!(
+                        "could not read {}: no such file",
+                        path.display()
+                    )));
+                }
+                Some(path)
+            }
+            None => None,
+        };
         views.push(ScannedView {
             id: format!("{}/{}", manifest.id, view.id),
             name: view.name,
-            script: read(&view.script)?,
-            css: view.css.as_deref().map(read).transpose()?,
+            bundle,
         });
     }
 

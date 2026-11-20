@@ -12,6 +12,7 @@ import { loadCalendars } from "@/stores/calendar"
 import { startClock } from "@/stores/clock"
 import { startDeepLinks } from "@/stores/deep-links"
 import { startEventStore } from "@/stores/events"
+import { startPluginViews } from "@/stores/plugin-views"
 import { loadSettings } from "@/stores/settings"
 import { startSync } from "@/stores/sync"
 import { startUpdates } from "@/stores/update"
@@ -30,6 +31,7 @@ async function start() {
   await loadSettings()
   await loadCalendars()
   await startThemes()
+  await startPluginViews()
   startEventStore()
   startSync()
   startIcsImport()

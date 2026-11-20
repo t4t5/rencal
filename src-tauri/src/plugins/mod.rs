@@ -635,10 +635,14 @@ fn scan_package(
 
     let mut views = Vec::with_capacity(manifest.contributes.views.len());
     for view in manifest.contributes.views {
+        // A view with only an NSH bundle needs a newer renCal.
+        let Some(script) = &view.script else {
+            continue;
+        };
         views.push(ScannedView {
             id: format!("{}/{}", manifest.id, view.id),
             name: view.name,
-            script: read(&view.script)?,
+            script: read(script)?,
             css: view.css.as_deref().map(read).transpose()?,
         });
     }

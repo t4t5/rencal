@@ -26,7 +26,7 @@ import {
   toggleSidebar,
 } from "@/stores/view"
 import { controlSurface, typography } from "@/themes"
-import { resolveView, VIEWS } from "@/views/manifest"
+import { resolveView, views } from "@/views/manifest"
 
 /** A dropdown that looks like a secondary button, as the old select button did. */
 function SelectMenu(props: { label: string; children?: JSX.Element }) {
@@ -61,7 +61,7 @@ function CalendarViewDropdown() {
     actionKeys(`view.switch:${id}`)?.split("+").map(formatHotkeyKey).join("+")
   return (
     <SelectMenu label={resolveView(calendarView()).name}>
-      <Each of={VIEWS} key={(view) => view.id}>
+      <Each of={views()} key={(view) => view.id}>
         {(view) => (
           <MenuItem class="gap-3" onSelect={() => setCalendarView(view().id)}>
             <CheckSlot checked={resolveView(calendarView()).id === view().id} />

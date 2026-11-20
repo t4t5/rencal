@@ -80,18 +80,20 @@ export function noteDismissed(key: string) {
 }
 
 /** Opens the event's popover at `ref`, or closes it if it's the one open. */
-export async function pressEvent(
-  event: CalendarEvent,
-  ref: ViewRef | undefined,
-  press?: PressEvent,
-) {
-  const key = eventKey(event)
+export const pressEvent = (event: CalendarEvent, ref: ViewRef | undefined, press?: PressEvent) =>
+  togglePopover(eventKey(event), () => anchorPopover(ref, press))
+
+/** `pressEvent` for an event drawn where no view of this engine stands for it (a view plugin's). */
+export const pressEventAt = (key: string, bounds: Bounds) =>
+  togglePopover(key, () => anchorPopoverAt(bounds))
+
+async function togglePopover(key: string, anchorIt: () => Promise<void> | void) {
   if (dismissed?.key === key && Date.now() - dismissed.at < DISMISS_WINDOW_MS) return
   const current = untracked(activeEvent)
   if (current && eventKey(current) === key) {
     setActiveEventKey(null)
     return
   }
-  await anchorPopover(ref, press)
+  await anchorIt()
   setActiveEventKey(key)
 }

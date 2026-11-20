@@ -1,5 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { Backend } from "rencal/native"
+
+import { nativeZones } from "@/lib/native-zones"
 
 /**
  * The viewer's IANA timezone, for example "Europe/Stockholm". Seeded from Intl
@@ -13,7 +14,7 @@ const subscribers = new Set<() => void>()
 
 export function getViewerTzid(): string {
   if (cachedViewerTzid === undefined) {
-    cachedViewerTzid = Backend.systemZone()
+    cachedViewerTzid = nativeZones().systemZone()
   }
   return cachedViewerTzid
 }

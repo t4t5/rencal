@@ -4,8 +4,7 @@
  * rule did. What CSS derived with calc() is derived here, and NSH's `setTheme`
  * swaps the tokens natively.
  */
-import { setTheme, signal, type Theme } from "nsh"
-import { Backend } from "rencal/native"
+import { nativeModule, setTheme, signal, type Theme } from "nsh"
 
 import { cn } from "@/lib/utils"
 
@@ -193,6 +192,7 @@ export function surfacesOf(overrides: Vars, mode: Appearance): Surfaces {
 const appearance = signal<Appearance>("dark")
 const paintVersion = signal(0)
 const surfaces = signal<Surfaces>({ button: "", control: "" })
+const applied = signal<{ overrides: Vars; mode: Appearance } | null>(null)
 
 /** A theme's button bevel, as classes ("" for none). */
 export const buttonSurface = () => surfaces().button
@@ -205,10 +205,15 @@ export const activeAppearance = () => appearance()
 /** Changes when the theme does, for colors computed from its tokens. */
 export const themeVersion = () => paintVersion()
 
+/** The theme drawn now, for engines of their own (view plugins) to apply too. */
+export const appliedTheme = () => applied()
+
 export { typography } from "./typography"
 
 export async function applyTheme(overrides: Vars, mode: Appearance): Promise<void> {
-  setTheme(themeFile(overrides, mode))
+  const file = themeFile(overrides, mode)
+  setTheme(file)
+  applied.set({ overrides, mode })
   appearance.set(mode)
   setFaces(overrides)
   surfaces.set(surfacesOf(overrides, mode))
@@ -218,5 +223,9 @@ export async function applyTheme(overrides: Vars, mode: Appearance): Promise<voi
 /** A theme's colors by token, for painting it without drawing the app with it. */
 export function themeColors(overrides: Vars, mode: Appearance): Promise<Vars> {
   const file = JSON.stringify(themeFile(overrides, mode))
+  // Looked up, not imported: view plugins' bundles can't import `rencal/native`.
+  const { Backend } = nativeModule<{
+    Backend: { themeColors(json: string, dark: boolean): Promise<unknown> }
+  }>("rencal/native")
   return Backend.themeColors(file, mode === "dark") as Promise<Vars>
 }
