@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 
 import { ChevronDownIcon } from "@/icons"
 import { timeFormat } from "@/stores/settings"
-import { typography } from "@/themes"
+import { controlSurface, typography } from "@/themes"
 
 /**
  * A time of day picked from quarter-hour slots or typed ("3pm", "15:30"), in
@@ -51,7 +51,11 @@ export function TimeInput(props: {
       <Combobox
         // No gaps or end padding: the input and the chevron fill the row, so
         // every point of it takes a press.
-        class={cn("w-auto gap-0 px-0", props.disabled && "hover:border-transparent", props.class)}
+        class={cn(
+          "group w-auto gap-0 px-0",
+          props.disabled && "hover:border-transparent",
+          props.class,
+        )}
         // Sized to the widest label, so the field keeps its width as it's edited.
         inputClass={cn(
           "flex-none pl-2",
@@ -84,7 +88,15 @@ export function TimeInput(props: {
           </If>
         }
         triggerButton={
-          <View class={cn("self-stretch justify-center px-2", props.disabled && "opacity-0")}>
+          // Shown on hover or while open, as the select trigger's.
+          <View
+            class={cn(
+              "self-stretch justify-center px-2",
+              props.disabled
+                ? "opacity-0"
+                : !open() && !controlSurface() && "opacity-0 group-hover:opacity-100",
+            )}
+          >
             <ChevronDownIcon class="size-3" color={token("muted-foreground")} />
           </View>
         }
