@@ -35,6 +35,8 @@ import { useMenuOpen } from "@/lib/menu-event"
 import { useTooltipTrigger } from "./components"
 import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
+export { TimeZoneDivider, useTimeZoneGutter } from "./TimeZoneGutter"
+
 export { Temporal } from "@js-temporal/polyfill"
 export { type CalendarEvent, type EventDay, eventsByDay } from "./events"
 export type { EventAvailability, EventStatus, ResponseStatus } from "@/lib/cal-events"
