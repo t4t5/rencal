@@ -48,9 +48,21 @@ export function DeleteConfirmDialog() {
       <DialogFooter>
         <If
           when={isRecurring()}
-          else={<Button variant="destructive" label="Delete" onPress={() => void deleteThis()} />}
+          else={
+            <Button
+              variant="destructive"
+              label="Delete"
+              autoFocus
+              onPress={() => void deleteThis()}
+            />
+          }
         >
-          <Button variant="secondary" label="Only this event" onPress={() => void deleteThis()} />
+          <Button
+            variant="secondary"
+            label="Only this event"
+            autoFocus
+            onPress={() => void deleteThis()}
+          />
           <Button
             variant="destructive"
             label="This and future events"

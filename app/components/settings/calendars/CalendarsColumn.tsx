@@ -268,7 +268,13 @@ function DeleteCalendarDialog(props: { calendar: Calendar; onClose: () => void }
       </DialogHeader>
       <ErrorText message={error()} />
       <DialogFooter>
-        <Button variant="secondary" label="Cancel" onPress={props.onClose} disabled={deleting()} />
+        <Button
+          variant="secondary"
+          label="Cancel"
+          autoFocus
+          onPress={props.onClose}
+          disabled={deleting()}
+        />
         <Button
           variant="destructive"
           label={removeLabel()}

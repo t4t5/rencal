@@ -1,5 +1,7 @@
-import { type JSX, Text } from "nsh"
+import { cleanup, effect, type JSX, Text, type ViewRef } from "nsh"
 import { Button as BaseButton } from "nsh/base"
+
+import { DialogFocus } from "@/components/ui/dialog"
 
 import { cn } from "@/lib/utils"
 
@@ -11,7 +13,7 @@ type Size = "default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "i
 const VARIANTS: Record<Variant, string> = {
   default: "bg-primary hover:bg-primary-hover",
   secondary: "bg-secondary hover:bg-secondary-hover border border-button-border",
-  destructive: "bg-destructive hover:bg-destructive-hover",
+  destructive: "bg-destructive hover:bg-destructive-hover focus-visible:ring-destructive/50",
   outline: "bg-background border border-input hover:bg-accent",
   ghost: "hover:bg-accent",
   link: "",
@@ -41,6 +43,7 @@ const SIZES: Record<Size, string> = {
 export function buttonClass(variant: Variant = "default", size: Size = "default") {
   return cn(
     "flex-row items-center justify-center gap-2 shrink-0 disabled:opacity-50 rounded-(--radius-md)",
+    "focus-visible:ring-[3px] focus-visible:ring-ring/50",
     VARIANTS[variant],
     SIZES[size],
     buttonSurface(),
@@ -61,12 +64,20 @@ export function Button(props: {
   label?: string
   accessibilityLabel?: string
   testID?: string
+  /** Focused once the dialog it's in has opened, so Return presses it. */
+  autoFocus?: boolean
   onPress?: () => void
   children?: JSX.Element
 }) {
   const variant = () => props.variant ?? "default"
+  const claimFocus = DialogFocus()
+  let ref: ViewRef | undefined
+  effect(() => {
+    if (props.autoFocus && claimFocus) cleanup(claimFocus(() => ref))
+  })
   return (
     <BaseButton
+      ref={ref}
       onPress={props.onPress}
       disabled={props.disabled}
       accessibilityLabel={props.accessibilityLabel}

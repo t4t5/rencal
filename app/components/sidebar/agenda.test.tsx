@@ -57,6 +57,22 @@ test("tab steps through events and enter opens the selected one", async () => {
   await app.waitFor("Add timezone")
 })
 
+test("backspace asks to delete the selected event, and enter confirms", async () => {
+  const app = await opened()
+  // Step to an event of our own: others can't be deleted.
+  for (let i = 0; i < 10 && app.count("text:/^Delete( recurring)? event$/i") === 0; i++) {
+    await app.keyboard.press("tab")
+    await app.keyboard.press("backspace")
+    await app.wait(100)
+  }
+  await app.waitFor("text:/^Delete( recurring)? event$/i")
+  await app.wait(300)
+  await app.keyboard.press("enter")
+  await app.waitUntil(() => app.count("text:/^Delete( recurring)? event$/i") === 0)
+  // Enter went to the dialog, not to the selected row behind it.
+  expect(app.count("Add timezone")).toBe(0)
+})
+
 test("tab after opening an event goes to its title, past More options", async () => {
   const app = await opened()
   // Step to an event of our own: only those have More options before the title.

@@ -253,7 +253,13 @@ function RemoveAccountDialog(props: {
       </DialogHeader>
       <ErrorText message={error()} />
       <DialogFooter>
-        <Button variant="secondary" label="Cancel" onPress={props.onClose} disabled={removing()} />
+        <Button
+          variant="secondary"
+          label="Cancel"
+          autoFocus
+          onPress={props.onClose}
+          disabled={removing()}
+        />
         <Button
           variant="destructive"
           label={removing() ? "Removing..." : "Remove account"}

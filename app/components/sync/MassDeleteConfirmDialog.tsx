@@ -55,7 +55,7 @@ export function MassDeleteConfirmDialog() {
         </Each>
       </View>
       <DialogFooter>
-        <Button variant="secondary" label="Cancel" onPress={cancelMassDelete} />
+        <Button variant="secondary" label="Cancel" autoFocus onPress={cancelMassDelete} />
         <Button
           variant="secondary"
           label="Restore events"

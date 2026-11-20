@@ -37,6 +37,8 @@ function RecurrenceConfirmDialog(props: {
   onApplyToFuture: () => void
   onApplyToThis: () => void
 }) {
+  const canThis = () => props.canApplyToThis ?? true
+  const canFuture = () => props.canApplyToFuture ?? true
   return (
     <Dialog open={props.isOpen} onOpenChange={(open) => !open && props.onClose()} class="w-[576px]">
       <DialogHeader>
@@ -46,17 +48,27 @@ function RecurrenceConfirmDialog(props: {
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <If when={props.canApplyToThis ?? true}>
-          <Button variant="secondary" label="Only this event" onPress={props.onApplyToThis} />
+        <If when={canThis()}>
+          <Button
+            variant="secondary"
+            label="Only this event"
+            autoFocus
+            onPress={props.onApplyToThis}
+          />
         </If>
-        <If when={props.canApplyToFuture ?? true}>
+        <If when={canFuture()}>
           <Button
             variant="secondary"
             label="This and future events"
+            autoFocus={!canThis()}
             onPress={props.onApplyToFuture}
           />
         </If>
-        <Button label="All events" onPress={props.onApplyToAll} />
+        <Button
+          label="All events"
+          autoFocus={!canThis() && !canFuture()}
+          onPress={props.onApplyToAll}
+        />
       </DialogFooter>
     </Dialog>
   )

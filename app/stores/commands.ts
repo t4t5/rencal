@@ -35,6 +35,7 @@ import { parseEventText } from "@/lib/magic-parser"
 
 import { clearAgendaSelection, selectedEvent, stepAgendaSelection } from "@/stores/agenda"
 import { activeDate, activeGroup, navigateToDate, setActiveGroup } from "@/stores/calendar"
+import { mainDialogOpen } from "@/stores/dialogs"
 import {
   canCreate,
   draftPopoverOpen,
@@ -148,7 +149,7 @@ export const eventOpen = () => !!activeEvent() || draftPopoverOpen()
 
 /** Something modal covers the calendar, or Settings has the keyboard: only keys that work anywhere reach it. */
 export const calendarCovered = () =>
-  paletteVisible() || searchVisible() || shortcutsVisible() || settingsFocused()
+  paletteVisible() || searchVisible() || shortcutsVisible() || mainDialogOpen() || settingsFocused()
 
 function openPalette(next: PalettePage) {
   page.set(next)

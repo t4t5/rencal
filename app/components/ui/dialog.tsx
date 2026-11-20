@@ -1,10 +1,17 @@
-import { type JSX, Text, View } from "nsh"
+import { cleanup, context, effect, type JSX, Text, View, type ViewRef } from "nsh"
 import { Button as BaseButton, Dialog as BaseDialog } from "nsh/base"
+import { currentWindow } from "nsh/desktop"
 
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons"
+import { noteMainDialogOpen } from "@/stores/dialogs"
 import { typography } from "@/themes"
+
+type FocusClaim = () => ViewRef | undefined
+
+/** Where a `Button` with `autoFocus` asks its dialog for the focus. */
+export const DialogFocus = context<((claim: FocusClaim) => () => void) | null>(null)
 
 /** A centered modal: pressing the backdrop or Escape closes it. */
 export function Dialog(props: {
@@ -14,10 +21,24 @@ export function Dialog(props: {
   showCloseButton?: boolean
   children?: JSX.Element
 }) {
+  const win = currentWindow()
+  effect(() => {
+    if (win.main && props.open) cleanup(noteMainDialogOpen())
+  })
+
+  // NSH's dialogs take the focus from what's under them but give it to nothing;
+  // a ref's focus() misses on Linux until the dialog has appeared.
+  const claims: FocusClaim[] = []
+  const claim = (ref: FocusClaim) => {
+    claims.push(ref)
+    return () => void claims.splice(claims.indexOf(ref), 1)
+  }
+
   return (
     <BaseDialog
       open={props.open}
       onOpenChange={(event) => props.onOpenChange(event.open)}
+      onOpen={() => claims[0]?.()?.focus()}
       animation="fade"
       backdropClass="bg-overlay"
       class={cn(
@@ -34,7 +55,7 @@ export function Dialog(props: {
           <CloseIcon class="size-4" />
         </BaseButton>
       </If>
-      {props.children}
+      <DialogFocus.Provider value={claim}>{props.children}</DialogFocus.Provider>
     </BaseDialog>
   )
 }

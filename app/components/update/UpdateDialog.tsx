@@ -41,7 +41,13 @@ export function UpdateDialog() {
         </If>
       </DialogHeader>
       <DialogFooter>
-        <Button variant="secondary" label="Later" disabled={busy()} onPress={closeUpdatePrompt} />
+        <Button
+          variant="secondary"
+          label="Later"
+          autoFocus
+          disabled={busy()}
+          onPress={closeUpdatePrompt}
+        />
         <Button
           label={updateActionLabel("Download")}
           disabled={busy()}
