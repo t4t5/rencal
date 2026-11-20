@@ -194,6 +194,7 @@ export function MonthView() {
         <If when={width() > 0}>
           <Scroll
             ref={scroller}
+            scrollbar={false}
             snapToInterval={reduceMotion() ? 0 : rowHeight()}
             decelerationRate={WEEK_SNAP_DECELERATION}
             contentOffset={{ y: untracked(() => topIndex * rowHeight()) }}
