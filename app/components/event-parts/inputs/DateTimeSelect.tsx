@@ -5,7 +5,6 @@ import { Button as BaseButton } from "nsh/base"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { ItemMedia } from "@/components/ui/item"
-import { TimeField } from "@/components/ui/time-field"
 import { Tooltip } from "@/components/ui/tooltip"
 
 import {
@@ -17,7 +16,6 @@ import {
   shouldShowDisplayEndDate,
   type EventTime,
   type EventTimeRange,
-  wallclockTime,
   withRangeDisplayEndDate,
   withRangeEndWallclockTime,
   withRangeStartDate,
@@ -31,6 +29,7 @@ import { cn } from "@/lib/utils"
 import { ArrowRightIcon, ClockIcon, UndoIcon } from "@/icons"
 import { typography } from "@/themes"
 
+import { TimeInput } from "./TimeInput"
 import { TimeZoneSelect } from "./TimeZoneSelect"
 
 export type DateTimeRange = EventTimeRange
@@ -66,28 +65,23 @@ function TimeRow(props: {
   onChangeStart: (hour: number, minute: number) => void
   onChangeEnd: (hour: number, minute: number) => void
 }) {
-  const start = () => wallclockTime(props.start)
-  const end = () => wallclockTime(props.end)
   const disabled = () => props.allDay || props.readOnly
   return (
     <View class={cn("flex-row items-center", props.allDay && "opacity-50")}>
-      <View class="flex-row items-center gap-2 pl-2">
-        <ItemMedia>
-          <ClockIcon color={token("muted-foreground")} />
-        </ItemMedia>
-        <TimeField
-          class="-ml-2"
-          hour={start().hour}
-          minute={start().minute}
-          disabled={disabled()}
-          accessibilityLabel="Start time"
-          onChange={props.onChangeStart}
-        />
-      </View>
+      <TimeInput
+        value={props.start}
+        prefix={
+          <ItemMedia>
+            <ClockIcon color={token("muted-foreground")} />
+          </ItemMedia>
+        }
+        disabled={disabled()}
+        accessibilityLabel="Start time"
+        onChange={props.onChangeStart}
+      />
       <ArrowRightIcon class="mx-1" color={token("muted-foreground")} />
-      <TimeField
-        hour={end().hour}
-        minute={end().minute}
+      <TimeInput
+        value={props.end}
         disabled={disabled()}
         accessibilityLabel="End time"
         onChange={props.onChangeEnd}
