@@ -35,7 +35,7 @@ export function Segmented<T extends string>(props: {
           >
             <Text
               class={cn(
-                typography.button(),
+                typography.body(),
                 "text-muted-foreground group-hover:text-foreground group-selected:text-secondary-foreground",
               )}
             >
