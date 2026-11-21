@@ -3,9 +3,9 @@ import { Tab, Tabs } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
-import { typography } from "@/themes"
+import { buttonSurface, controlSurface, typography } from "@/themes"
 
-/** A choice of a few values side by side, the chosen one on a pill that slides to it. */
+/** A choice of a few values side by side in a recessed well, the chosen one on a raised chip that slides to it. */
 export function Segmented<T extends string>(props: {
   items: { value: T; title: string }[]
   value: T
@@ -14,20 +14,29 @@ export function Segmented<T extends string>(props: {
 }) {
   return (
     <Tabs
-      class={cn("h-6 flex-row rounded-(--radius-circle) bg-muted p-0.5", props.class)}
-      indicatorClass="inset-y-0.5 rounded-(--radius-circle) bg-selected"
+      class={cn(
+        "flex-row gap-0.5 rounded-(--radius-md) bg-background p-0.5",
+        controlSurface(),
+        props.class,
+      )}
+      // Drawn as a secondary button, a shade up to make up for the darker well; the
+      // tabs set the height and the well wraps them.
+      indicatorClass={cn(
+        "inset-y-0.5 rounded-(--radius-sm) border border-button-border bg-secondary-hover",
+        buttonSurface(),
+      )}
     >
       <Each of={props.items} key={(item) => item.value}>
         {(item) => (
           <Tab
             selected={item().value === props.value}
             onPress={() => props.onChange(item().value)}
-            class="group items-center justify-center px-2.5"
+            class="group h-(--control-height-sm) items-center justify-center px-3"
           >
             <Text
               class={cn(
-                typography.buttonSm(),
-                "text-muted-foreground group-selected:text-selected-foreground",
+                typography.button(),
+                "text-muted-foreground group-hover:text-foreground group-selected:text-secondary-foreground",
               )}
             >
               {item().title}

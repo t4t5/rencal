@@ -99,7 +99,6 @@ export function GeneralPage() {
           <If when={availableUpdate()}>
             <Button
               variant="secondary"
-              size="sm"
               label={updateActionLabel(`Update to v${availableUpdate()?.version}`)}
               disabled={updatePhase() !== "idle"}
               onPress={() => void installUpdate()}
@@ -130,7 +129,7 @@ function DataDirectoryRow() {
       description={calendarDir()}
       detail={<ErrorText class={typography.caption()} message={error()} />}
     >
-      <Button variant="secondary" size="sm" label="Change" onPress={() => void change()} />
+      <Button variant="secondary" label="Change" onPress={() => void change()} />
     </SettingsRow>
   )
 }
