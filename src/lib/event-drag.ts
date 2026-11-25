@@ -6,6 +6,9 @@
  * in the week time grid, an additional wallclock-minute delta. Deltas are
  * applied to both start and end so the duration and the event's own timezone
  * are preserved: dragging never re-zones or re-kinds an event.
+ *
+ * A drag that starts on the top or bottom edge of a timed block resizes it
+ * instead: only that end moves, to the snapped time under the pointer.
  */
 import { Temporal } from "@js-temporal/polyfill"
 
@@ -91,12 +94,62 @@ export function computeDropRange(
   return shiftRange(event, dayDelta, 0)
 }
 
+/** Which end of a timed event a resize drag moves. */
+export type ResizeEdge = "start" | "end"
+
+/** How close to a timed block's top or bottom edge a press resizes instead of moving. */
+const RESIZE_EDGE_PX = 6
+
+/** Blocks shorter than this only resize from the bottom, so the rest of them still moves. */
+const RESIZE_BOTH_EDGES_MIN_HEIGHT_PX = 24
+
+/**
+ * The edge a press at `y` on a timed block with bounds `rect` would resize, or
+ * null to move the block. Used for both the press and the hover cursor, so the
+ * cursor always matches what a press does.
+ */
+export function resizeEdgeAt(rect: { top: number; bottom: number }, y: number): ResizeEdge | null {
+  if (y < rect.top || y > rect.bottom) return null
+  if (y >= rect.bottom - RESIZE_EDGE_PX) return "end"
+  if (rect.bottom - rect.top >= RESIZE_BOTH_EDGES_MIN_HEIGHT_PX && y <= rect.top + RESIZE_EDGE_PX) {
+    return "start"
+  }
+  return null
+}
+
+/**
+ * The range after dragging the `edge` end of the event to `hit`, snapped like
+ * moves and never shorter than one snap step. Null off the time grid, or when
+ * the event would keep its current range. The other end keeps its exact value.
+ */
+export function computeResizeRange(
+  event: CalendarEvent,
+  hit: DropHit,
+  edge: ResizeEdge,
+): EventTimeRange | null {
+  if (hit.zone !== "timed" || hit.minutes == null) return null
+
+  // Viewer-zone wallclock minutes since the epoch, so a resize can cross midnight.
+  const info = event.dateInfo
+  const snapped = Math.round(hit.minutes / DRAG_SNAP_MINUTES) * DRAG_SNAP_MINUTES
+  const target = epochDay(hit.day) * DAY_MINUTES + snapped
+  const start = info.firstDay * DAY_MINUTES + info.startLocalMinutes
+  const end = info.endDay * DAY_MINUTES + info.endLocalMinutes
+
+  if (edge === "end") {
+    const delta = Math.max(target, start + DRAG_SNAP_MINUTES) - end
+    return delta === 0 ? null : { start: event.start, end: addMinutes(event.end, delta) }
+  }
+  const delta = Math.min(target, end - DRAG_SNAP_MINUTES) - start
+  return delta === 0 ? null : { start: addMinutes(event.start, delta), end: event.end }
+}
+
 const DRAG_PREVIEW_SUFFIX = "__drag-preview"
 
 /**
  * A stand-in rendered at the drop position while dragging. It gets its own id
- * so it never collides with the (still rendered, dimmed) source event in React
- * keys or the active-event tracker.
+ * so it never collides with the source event in React keys or the active-event
+ * tracker (the source stays rendered, dimmed, while moving).
  */
 export function makeDragPreview(event: CalendarEvent, range: EventTimeRange): CalendarEvent {
   return { ...withDates(event, range.start, range.end), id: `${event.id}${DRAG_PREVIEW_SUFFIX}` }
