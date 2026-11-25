@@ -1,5 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
 
+import { formatWallclockTime, type TimeFormat } from "@/sdk"
+
 /** A timezone's column in the time gutter. */
 export type GutterZone = {
   tzid: string
@@ -19,6 +21,21 @@ export function hourInZone(
     .toZonedDateTime({ timeZone: viewerTzid, plainTime: new Temporal.PlainTime(hour) })
     .withTimeZone(tzid)
   return { hour: there.hour, minute: there.minute }
+}
+
+/**
+ * An hour label for the time gutter. 12-hour times are shortened ("9 AM", "noon", "9:30a")
+ * because "10:00 AM" is wider than a gutter column; 24-hour times already fit.
+ */
+export function formatZoneHour(
+  { hour, minute }: { hour: number; minute: number },
+  timeFormat: TimeFormat,
+): string {
+  if (timeFormat === "24h") return formatWallclockTime(hour, minute, timeFormat)
+  if (hour === 12 && minute === 0) return "noon"
+  const h12 = hour % 12 === 0 ? 12 : hour % 12
+  if (minute === 0) return `${h12} ${hour < 12 ? "AM" : "PM"}`
+  return `${h12}:${String(minute).padStart(2, "0")}${hour < 12 ? "a" : "p"}`
 }
 
 const midday = (date: Temporal.PlainDate, tzid: string) =>

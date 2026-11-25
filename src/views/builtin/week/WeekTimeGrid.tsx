@@ -6,7 +6,6 @@ import {
   cn,
   dayProps,
   epochDay,
-  formatWallclockTime,
   formatWeekday,
   type TimeFormat,
   TimeZoneMenu,
@@ -26,7 +25,13 @@ import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
 import { useGutterZones } from "./useGutterZones"
 import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
-import { type GutterZone, hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
+import {
+  formatZoneHour,
+  type GutterZone,
+  hourInZone,
+  zoneAbbreviation,
+  zoneDescription,
+} from "./zones"
 
 type WeekTimeGridProps = {
   span: Span
@@ -272,9 +277,6 @@ export function WeekTimeGrid({
 
 // A lone day has no weekdays beside it to stand apart from.
 const isWeekend = (day: WeekDay, span: Span) => span === "week" && day.isWeekend
-
-const formatZoneHour = ({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) =>
-  formatWallclockTime(hour, minute, format)
 
 /**
  * One column of hour labels per zone. The grid's hours are the viewer's; the other zones
