@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConfirmDialog"
@@ -12,12 +12,10 @@ import { getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import { type CalendarEvent, withDates } from "@/lib/cal-events"
 import { addDays } from "@/lib/event-time"
 import { isUserOrganizer } from "@/lib/event-utils"
-import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
+import { anchorRangeToRecurringMaster, type PendingEdit } from "@/lib/recurrence-edit"
 import { daysToFirstOccurrence } from "@/lib/rrule-utils"
 import { updateAndSyncEvent } from "@/lib/save-event"
 import { createStrictContext } from "@/lib/strict-context"
-
-type PendingEdit = { current: CalendarEvent; original: CalendarEvent }
 
 // The repeat field of an occurrence edits its copy of the series rule.
 const isRuleChanged = ({ current, original }: PendingEdit) =>
@@ -27,6 +25,9 @@ interface RecurrenceEditContextValue {
   // Non-recurring events save directly.
   // Recurring events show a dialog ("Only this event", "All future events"...)
   requestSave: (current: CalendarEvent, original: CalendarEvent) => void
+  // Recurring edits the grid draws in place of their occurrence: the one the
+  // dialog asks about, then each chosen one until its save has finished.
+  pendingEdits: readonly PendingEdit[]
 }
 
 const [RecurrenceEditContextProvider, useRecurrenceEdit] =
@@ -41,6 +42,11 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null)
   const [shownEdit, setShownEdit] = useState(pendingEdit)
   if (pendingEdit && pendingEdit !== shownEdit) setShownEdit(pendingEdit)
+  const [savingEdits, setSavingEdits] = useState<readonly PendingEdit[]>([])
+  const pendingEdits = useMemo(
+    () => (pendingEdit ? [...savingEdits, pendingEdit] : savingEdits),
+    [savingEdits, pendingEdit],
+  )
 
   const requestSave = (current: CalendarEvent, original: CalendarEvent) => {
     if (current.recurring_event_id !== null) {
@@ -52,30 +58,31 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
 
   const closeDialog = () => setPendingEdit(null)
 
+  // Keeps the edit drawn until its save has finished, so the occurrence doesn't
+  // flash back to its old time while the save and reload are in flight.
+  const choose = (save: (edit: PendingEdit) => Promise<void>) => () => {
+    const edit = pendingEdit
+    if (!edit) return
+    closeDialog()
+    setSavingEdits((prev) => [...prev, edit])
+    void save(edit).finally(() => setSavingEdits((prev) => prev.filter((e) => e !== edit)))
+  }
+
   const reportError = (err: unknown) => {
     const message = getErrorMessage(err, "Failed to save event")
     toast.error("Failed to save event", { description: message })
     console.error("recurring update failed:", err)
   }
 
-  const handleApplyToThis = async () => {
-    if (!pendingEdit) return
-    const { current, original } = pendingEdit
-    closeDialog()
+  const applyToThis = async ({ current, original }: PendingEdit) => {
     // The backend's update_event detects synthetic instance ids and creates
     // an override file inheriting the master's metadata.
     await updateAndSyncEvent(current, original, setCalendarEvents, requestSync)
   }
 
-  const handleApplyToFuture = async () => {
-    if (!pendingEdit) return
-    const { current } = pendingEdit
+  const applyToFuture = async ({ current }: PendingEdit) => {
     // A null rule is fine here: the split-off part becomes a single event.
-    if (!current.recurring_event_id) {
-      closeDialog()
-      return
-    }
-    closeDialog()
+    if (!current.recurring_event_id) return
 
     try {
       const newMaster = await splitRecurringSeriesAt({
@@ -110,14 +117,9 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const handleApplyToAll = async () => {
-    if (!pendingEdit) return
-    const { current, original } = pendingEdit
-    if (!current.recurring_event_id) {
-      closeDialog()
-      return
-    }
-    closeDialog()
+  const applyToAll = async (edit: PendingEdit) => {
+    const { current, original } = edit
+    if (!current.recurring_event_id) return
 
     try {
       const master = await getStoredEvent({
@@ -136,7 +138,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
       // A new rule replaces the old one but keeps its exceptions, and the
       // series start moves onto the new rule's first day if needed.
       let recurrence = master.recurrence
-      if (isRuleChanged(pendingEdit)) {
+      if (isRuleChanged(edit)) {
         recurrence = current.master_recurrence && {
           ...current.master_recurrence,
           exdates: master.recurrence?.exdates ?? [],
@@ -177,7 +179,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <RecurrenceEditContextProvider value={{ requestSave }}>
+    <RecurrenceEditContextProvider value={{ requestSave, pendingEdits }}>
       {children}
       <RecurrenceConfirmDialog
         isOpen={pendingEdit !== null}
@@ -186,9 +188,9 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         // Only the organizer can split a recurring series.
         canApplyToFuture={shownEdit ? isUserOrganizer(shownEdit.current, calendars) : true}
         onClose={closeDialog}
-        onApplyToThis={handleApplyToThis}
-        onApplyToFuture={handleApplyToFuture}
-        onApplyToAll={handleApplyToAll}
+        onApplyToThis={choose(applyToThis)}
+        onApplyToFuture={choose(applyToFuture)}
+        onApplyToAll={choose(applyToAll)}
       />
     </RecurrenceEditContextProvider>
   )
