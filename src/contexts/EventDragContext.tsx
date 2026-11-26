@@ -7,11 +7,16 @@
  * move through `requestSave`, which handles optimistic updates, rollback, and
  * the recurring-event dialog exactly like the edit popover does.
  *
+ * A press on the top or bottom edge of a timed block in the time grid resizes
+ * the event instead: the preview replaces the block, stretched to the snapped
+ * time under the pointer, and no floating copy is shown.
+ *
  * Drop targets are the day elements views mark with `dayAttributes` (see
  * `DayZone` in lib/day-grid); the event's scroll container auto-scrolls near
  * its edges.
  */
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -28,14 +33,17 @@ import { dayElementAt, scrollParent } from "@/lib/day-grid"
 import { createDebugLogger } from "@/lib/debug"
 import {
   computeDropRange,
+  computeResizeRange,
   DRAG_THRESHOLD_PX,
   edgeScrollDelta,
   grabFor,
   makeDragPreview,
+  resizeEdgeAt,
   startDragScroll,
   type DragScroll,
   type DragGrab,
   type DropHit,
+  type ResizeEdge,
 } from "@/lib/event-drag"
 import { DAY_MINUTES, formatDateKey, isSameEventTime, type EventTimeRange } from "@/lib/event-time"
 import { isEventReadonly } from "@/lib/event-utils"
@@ -65,6 +73,8 @@ export interface ActiveEventDrag {
   float: DragFloat
   /** Pointer position when the drag activated; the overlay seeds from it. */
   pointer: { x: number; y: number }
+  /** The end being dragged when resizing, or null when moving the whole event. */
+  resize: ResizeEdge | null
 }
 
 type StartDrag = (
@@ -99,6 +109,7 @@ type DragSession = {
   target: EventTimeRange | null
   raf: number | null
   dragScroll: DragScroll
+  resize: ResizeEdge | null
 }
 
 function findDropHit(x: number, y: number): DropHit | null {
@@ -108,6 +119,16 @@ function findDropHit(x: number, y: number): DropHit | null {
 
   const rect = hit.el.getBoundingClientRect()
   return { zone: hit.zone, day: hit.day, minutes: ((y - rect.top) / rect.height) * DAY_MINUTES }
+}
+
+/**
+ * The edge a press at (x, y) on `el` would resize: only timed blocks laid out
+ * in the time grid resize, and only near their top or bottom.
+ */
+function blockResizeEdge(el: Element, x: number, y: number): ResizeEdge | null {
+  if (!(el instanceof HTMLElement) || el.dataset.kind !== "timed") return null
+  const edge = resizeEdgeAt(el.getBoundingClientRect(), y)
+  return edge && dayElementAt(x, y, "timed") ? edge : null
 }
 
 function sameRange(a: EventTimeRange | null, b: EventTimeRange | null): boolean {
@@ -139,13 +160,48 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
   requestSaveRef.current = requestSave
   const calendarEventsRef = useRef(calendarEvents)
   calendarEventsRef.current = calendarEvents
+  const { calendars } = useCalendars()
+  const calendarsRef = useRef(calendars)
+  calendarsRef.current = calendars
+
+  // Shows the resize cursor over the edges a press would resize, on blocks the
+  // user can drag. Views style their blocks, so the cursor is set inline.
+  useEffect(() => {
+    let cursorBlock: HTMLElement | null = null
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.buttons !== 0 || sessionRef.current) return
+      const block =
+        e.target instanceof Element
+          ? e.target.closest<HTMLElement>('[data-slot="calendar-event"][data-event-key]')
+          : null
+      if (cursorBlock && cursorBlock !== block) cursorBlock.style.removeProperty("cursor")
+      cursorBlock = block
+      if (!block) return
+
+      const event =
+        blockResizeEdge(block, e.clientX, e.clientY) &&
+        calendarEventsRef.current.find((ev) => eventKey(ev) === block.dataset.eventKey)
+      if (event && !isEventReadonly(event, calendarsRef.current)) block.style.cursor = "ns-resize"
+      else block.style.removeProperty("cursor")
+    }
+    document.addEventListener("pointermove", onPointerMove, { passive: true })
+    return () => {
+      document.removeEventListener("pointermove", onPointerMove)
+      cursorBlock?.style.removeProperty("cursor")
+    }
+  }, [])
 
   // Handlers are created once and read everything through refs so the window
   // listeners added at press time can always be removed again.
   const handlers = useMemo(() => {
     const updateTarget = (s: DragSession) => {
       const hit = findDropHit(s.lastX, s.lastY)
-      const range = hit ? computeDropRange(s.event, hit, s.grab) : null
+      let range: EventTimeRange | null = null
+      if (hit) {
+        range = s.resize
+          ? computeResizeRange(s.event, hit, s.resize)
+          : computeDropRange(s.event, hit, s.grab)
+      }
       if (sameRange(range, s.target)) return
 
       s.target = range
@@ -184,7 +240,12 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
     const activate = (s: DragSession) => {
       s.activated = true
       s.grab = grabFor(s.event, findDropHit(s.startX, s.startY))
-      debugDrag("activate", { event: s.sourceKey, grab: s.grab, float: s.float.kind })
+      debugDrag("activate", {
+        event: s.sourceKey,
+        grab: s.grab,
+        float: s.float.kind,
+        resize: s.resize,
+      })
 
       // The edit popover would otherwise stay open on the event being moved.
       setActiveEventKey(null)
@@ -195,6 +256,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
         preview: null,
         float: s.float,
         pointer: { x: s.lastX, y: s.lastY },
+        resize: s.resize,
       })
       s.raf = requestAnimationFrame(autoscrollTick)
     }
@@ -293,6 +355,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
         target: null,
         raf: null,
         dragScroll: startDragScroll(scrollEl),
+        resize: blockResizeEdge(el, e.clientX, e.clientY),
       }
       window.addEventListener("pointermove", onPointerMove)
       window.addEventListener("pointerup", onPointerUp)
@@ -328,11 +391,14 @@ export function useEventDragHandle(
 
 export type EventDragRole = "source" | "preview" | null
 
-/** Whether this block is the event being dragged (drawn dimmed) or its drop preview. */
+/**
+ * Whether this block is the event being moved (drawn dimmed) or its drop
+ * preview. A resize has no dimmed source: its preview replaces the block.
+ */
 export function useEventDragRole(event: CalendarEvent): EventDragRole {
   const { drag } = useEventDrag()
   if (!drag) return null
   if (drag.preview === event) return "preview"
-  if (eventKey(event) === drag.sourceKey) return "source"
+  if (!drag.resize && eventKey(event) === drag.sourceKey) return "source"
   return null
 }
