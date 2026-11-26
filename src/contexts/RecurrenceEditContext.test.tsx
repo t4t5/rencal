@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
-import { afterEach, beforeEach, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import type { CalendarEvent, Recurrence } from "@/lib/cal-events"
@@ -69,9 +69,12 @@ const occurrence = event({
 
 let root: Root
 let requestSave: ReturnType<typeof useRecurrenceEdit>["requestSave"]
+let pendingEdits: ReturnType<typeof useRecurrenceEdit>["pendingEdits"]
 
 function Capture() {
-  requestSave = useRecurrenceEdit().requestSave
+  const value = useRecurrenceEdit()
+  requestSave = value.requestSave
+  pendingEdits = value.pendingEdits
   return null
 }
 
@@ -171,4 +174,54 @@ it("only offers 'Only this event' when the rule is unchanged", async () => {
 
   await act(async () => requestSave({ ...occurrence, summary: "Sync" }, occurrence))
   expect(button("Only this event")).toBeDefined()
+})
+
+describe("pending edits", () => {
+  const moved = { ...occurrence, summary: "Moved" }
+
+  const deferredSave = () => {
+    let finish = () => {}
+    vi.mocked(updateAndSyncEvent).mockImplementationOnce(
+      () => new Promise<void>((resolve) => (finish = resolve)),
+    )
+    return async () => act(async () => finish())
+  }
+
+  it("shows the edit while the dialog is open and drops it on close", async () => {
+    await act(async () => requestSave(moved, occurrence))
+    expect(pendingEdits).toEqual([{ current: moved, original: occurrence }])
+
+    await act(async () => button("Close")!.click())
+    expect(pendingEdits).toEqual([])
+    expect(updateAndSyncEvent).not.toHaveBeenCalled()
+  })
+
+  it("keeps the chosen edit until its save has finished", async () => {
+    const finishSave = deferredSave()
+    await act(async () => requestSave(moved, occurrence))
+    await act(async () => button("Only this event")!.click())
+
+    expect(button("Only this event")).toBeUndefined()
+    expect(pendingEdits).toEqual([{ current: moved, original: occurrence }])
+
+    await finishSave()
+    expect(pendingEdits).toEqual([])
+  })
+
+  it("leaves a newer edit in place when an earlier save finishes", async () => {
+    const finishSave = deferredSave()
+    await act(async () => requestSave(moved, occurrence))
+    await act(async () => button("Only this event")!.click())
+
+    const again = { ...occurrence, summary: "Moved again" }
+    await act(async () => requestSave(again, occurrence))
+    await finishSave()
+
+    expect(pendingEdits).toEqual([{ current: again, original: occurrence }])
+  })
+
+  it("doesn't hold edits of events that aren't recurring", async () => {
+    await act(async () => requestSave({ ...master, summary: "Moved" }, master))
+    expect(pendingEdits).toEqual([])
+  })
 })

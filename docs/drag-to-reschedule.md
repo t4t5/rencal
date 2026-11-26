@@ -24,6 +24,10 @@ resized by dragging their top or bottom edge. Code:
 - Dropping calls `requestSave` from `RecurrenceEditContext`, so the optimistic
   update, rollback toast, and the recurring-event dialog behave exactly like
   edits from the popover.
+- A dropped or resized recurring occurrence stays drawn at its new position
+  while that dialog is open, and after a choice until the save has finished
+  (the pending edits from `RecurrenceEditContext`, applied by
+  `useEventsWithDrag`). Cancelling the dialog puts it back.
 
 ## Resizing
 
