@@ -19,7 +19,7 @@ export function DayView() {
 function TimeGridView({ span }: { span: Span }) {
   const { activeDate } = useNavigation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const gutterWidth = useGutterWidth()
+  const gutterWidth = useGutterWidth(activeDate)
   const { dayWidth, measured } = useDayWidth(scrollContainerRef, span, gutterWidth)
   const { origin, startIndex, days, start, end } = useInfiniteDays({
     scrollContainerRef,

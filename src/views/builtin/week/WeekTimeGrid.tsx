@@ -22,7 +22,7 @@ import { WeekAllDayBar } from "./AllDayEventBlock"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
-import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
+import { GRID_HEIGHT, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
 import { useGutterZones } from "./useGutterZones"
 import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
@@ -54,8 +54,8 @@ export function WeekTimeGrid({
   const { timeFormat, firstDayOfWeek } = useDisplaySettings()
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
-  const zones = useGutterZones()
-  const gutterWidth = zones.length * GUTTER_WIDTH
+  const zones = useGutterZones(activeDate)
+  const gutterWidth = zones.reduce((sum, zone) => sum + zone.width, 0)
 
   const activeDateKey = activeDate.toString()
   // A day on its own is always the active one, so marking it selected says nothing.
@@ -273,8 +273,11 @@ export function WeekTimeGrid({
 // A lone day has no weekdays beside it to stand apart from.
 const isWeekend = (day: WeekDay, span: Span) => span === "week" && day.isWeekend
 
-const formatZoneHour = ({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) =>
-  formatWallclockTime(hour, minute, format)
+// 12-hour labels drop ":00" ("10 AM") so whole-hour zones fit a narrow column.
+function formatZoneHour({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) {
+  if (format === "24h" || minute !== 0) return formatWallclockTime(hour, minute, format)
+  return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`
+}
 
 /**
  * One column of hour labels per zone. The grid's hours are the viewer's; the other zones
@@ -293,13 +296,13 @@ function TimeGutter({
 }) {
   return (
     <div className="flex" style={{ height: GRID_HEIGHT }}>
-      {zones.map(({ tzid, local }) => (
+      {zones.map(({ tzid, local, width }) => (
         <div
           key={tzid}
           data-slot="week-time-zone"
           data-local={local || undefined}
           className="relative"
-          style={{ width: GUTTER_WIDTH }}
+          style={{ width }}
         >
           {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
             <span
@@ -325,7 +328,7 @@ function TimeGutter({
 function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.PlainDate }) {
   return (
     <div className="flex">
-      {zones.map(({ tzid, local }) => {
+      {zones.map(({ tzid, local, width }) => {
         const name = zoneAbbreviation(tzid, date)
         return (
           <div
@@ -336,7 +339,7 @@ function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.Plain
               "h-7.5 pr-1 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none",
               !local && "opacity-70",
             )}
-            style={{ width: GUTTER_WIDTH }}
+            style={{ width }}
           >
             <Tooltip content={zoneDescription(tzid, date)} side="bottom">
               {local ? (

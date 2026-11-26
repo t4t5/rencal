@@ -1,6 +1,9 @@
 export const HOUR_HEIGHT = 48
 export const GRID_HEIGHT = 24 * HOUR_HEIGHT
-export const GUTTER_WIDTH = 48
+/** One zone's gutter column: fits "10 AM" and "10:30". */
+export const GUTTER_ZONE_WIDTH = 48
+/** A 12-hour zone off the hour needs room for "10:30 AM". */
+export const GUTTER_ZONE_WIDTH_WIDE = 64
 export const DAY_MINUTES = 24 * 60
 
 const WEEK_EVENT_RIGHT_GAP = 12
