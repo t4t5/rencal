@@ -24,7 +24,7 @@ import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
 import { GRID_HEIGHT, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
-import { useGutterZones, useGutterZoneWidth } from "./useGutterZones"
+import { useGutterZones } from "./useGutterZones"
 import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
 import { type GutterZone, hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
 
@@ -54,9 +54,8 @@ export function WeekTimeGrid({
   const { timeFormat, firstDayOfWeek } = useDisplaySettings()
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
-  const zones = useGutterZones()
-  const zoneWidth = useGutterZoneWidth()
-  const gutterWidth = zones.length * zoneWidth
+  const zones = useGutterZones(activeDate)
+  const gutterWidth = zones.reduce((sum, zone) => sum + zone.width, 0)
 
   const activeDateKey = activeDate.toString()
   // A day on its own is always the active one, so marking it selected says nothing.
@@ -181,7 +180,7 @@ export function WeekTimeGrid({
               {/* One zone needs no name: every time on screen is in it. Once zones are
                   named, their menus add more: a "+" beside them would cover a name. */}
               {zones.length > 1 ? (
-                <ZoneLabels zones={zones} zoneWidth={zoneWidth} date={activeDate} />
+                <ZoneLabels zones={zones} date={activeDate} />
               ) : (
                 <div className="h-7.5 pl-1 flex items-center">
                   <Tooltip content="Add time zone" side="bottom">
@@ -234,13 +233,7 @@ export function WeekTimeGrid({
             data-slot="week-time-gutter"
             className="sticky left-0 z-10 bg-background border-r border-border"
           >
-            <TimeGutter
-              zones={zones}
-              zoneWidth={zoneWidth}
-              date={activeDate}
-              viewerTzid={tzid}
-              timeFormat={timeFormat}
-            />
+            <TimeGutter zones={zones} date={activeDate} viewerTzid={tzid} timeFormat={timeFormat} />
           </div>
           {days.map((day) => (
             <div
@@ -280,8 +273,11 @@ export function WeekTimeGrid({
 // A lone day has no weekdays beside it to stand apart from.
 const isWeekend = (day: WeekDay, span: Span) => span === "week" && day.isWeekend
 
-const formatZoneHour = ({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) =>
-  formatWallclockTime(hour, minute, format)
+// 12-hour labels drop ":00" ("10 AM") so whole-hour zones fit a narrow column.
+function formatZoneHour({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) {
+  if (format === "24h" || minute !== 0) return formatWallclockTime(hour, minute, format)
+  return `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? "AM" : "PM"}`
+}
 
 /**
  * One column of hour labels per zone. The grid's hours are the viewer's; the other zones
@@ -289,26 +285,24 @@ const formatZoneHour = ({ hour, minute }: { hour: number; minute: number }, form
  */
 function TimeGutter({
   zones,
-  zoneWidth,
   date,
   viewerTzid,
   timeFormat,
 }: {
   zones: GutterZone[]
-  zoneWidth: number
   date: Temporal.PlainDate
   viewerTzid: string
   timeFormat: TimeFormat
 }) {
   return (
     <div className="flex" style={{ height: GRID_HEIGHT }}>
-      {zones.map(({ tzid, local }) => (
+      {zones.map(({ tzid, local, width }) => (
         <div
           key={tzid}
           data-slot="week-time-zone"
           data-local={local || undefined}
           className="relative"
-          style={{ width: zoneWidth }}
+          style={{ width }}
         >
           {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
             <span
@@ -331,18 +325,10 @@ function TimeGutter({
 }
 
 /** Names the gutter's columns, at the height of the day headers. Extra zones open a menu. */
-function ZoneLabels({
-  zones,
-  zoneWidth,
-  date,
-}: {
-  zones: GutterZone[]
-  zoneWidth: number
-  date: Temporal.PlainDate
-}) {
+function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.PlainDate }) {
   return (
     <div className="flex">
-      {zones.map(({ tzid, local }) => {
+      {zones.map(({ tzid, local, width }) => {
         const name = zoneAbbreviation(tzid, date)
         return (
           <div
@@ -353,7 +339,7 @@ function ZoneLabels({
               "h-7.5 pr-1 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none",
               !local && "opacity-70",
             )}
-            style={{ width: zoneWidth }}
+            style={{ width }}
           >
             <Tooltip content={zoneDescription(tzid, date)} side="bottom">
               {local ? (

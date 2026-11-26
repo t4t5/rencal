@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
-import { hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
+import { hourInZone, zoneAbbreviation, zoneColumnWidth, zoneDescription } from "./zones"
 
 const winter = Temporal.PlainDate.from("2026-11-14")
 const summer = Temporal.PlainDate.from("2026-07-14")
@@ -47,5 +47,22 @@ describe("zone names", () => {
     expect(zoneDescription("America/Los_Angeles", winter)).toBe("Los Angeles, GMT-8")
     expect(zoneDescription("America/Los_Angeles", summer)).toBe("Los Angeles, GMT-7")
     expect(zoneDescription("Asia/Kolkata", winter)).toBe("Kolkata, GMT+5:30")
+  })
+})
+
+describe("zoneColumnWidth", () => {
+  const width = (tzid: string, format: "12h" | "24h", viewer = "America/New_York") =>
+    zoneColumnWidth(winter, viewer, tzid, format)
+
+  it("keeps whole-hour zones narrow in both formats", () => {
+    expect(width("Europe/London", "12h")).toBe(48)
+    expect(width("Europe/London", "24h")).toBe(48)
+  })
+
+  it("widens 12-hour zones off the hour, measured against the viewer's", () => {
+    expect(width("Asia/Kolkata", "12h")).toBe(64)
+    expect(width("Asia/Kolkata", "24h")).toBe(48)
+    expect(width("Asia/Kolkata", "12h", "Asia/Kolkata")).toBe(48)
+    expect(width("Europe/London", "12h", "Asia/Kolkata")).toBe(64)
   })
 })
