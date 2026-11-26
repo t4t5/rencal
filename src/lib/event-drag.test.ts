@@ -12,7 +12,14 @@ import {
   type EventTime,
 } from "@/lib/event-time"
 
-import { computeDropRange, edgeScrollDelta, grabFor, makeDragPreview } from "./event-drag"
+import {
+  computeDropRange,
+  computeResizeRange,
+  edgeScrollDelta,
+  grabFor,
+  makeDragPreview,
+  resizeEdgeAt,
+} from "./event-drag"
 
 function makeEvent(start: EventTime, end: EventTime): CalendarEvent {
   return {
@@ -224,6 +231,114 @@ describe("computeDropRange", () => {
     // Back where it was grabbed: no move.
     expect(
       computeDropRange(event, { zone: "timed", day: day("2025-07-13"), minutes: 30 }, grab),
+    ).toBeNull()
+  })
+})
+
+describe("resizeEdgeAt", () => {
+  const tall = { top: 100, bottom: 196 }
+  const short = { top: 100, bottom: 112 }
+
+  it("resizes the end from the bottom edge", () => {
+    expect(resizeEdgeAt(tall, 196)).toBe("end")
+    expect(resizeEdgeAt(tall, 190)).toBe("end")
+  })
+
+  it("resizes the start from the top edge", () => {
+    expect(resizeEdgeAt(tall, 100)).toBe("start")
+    expect(resizeEdgeAt(tall, 106)).toBe("start")
+  })
+
+  it("moves from anywhere else on the block", () => {
+    expect(resizeEdgeAt(tall, 107)).toBeNull()
+    expect(resizeEdgeAt(tall, 150)).toBeNull()
+    expect(resizeEdgeAt(tall, 189)).toBeNull()
+  })
+
+  it("only resizes short blocks from the bottom, so they can still be moved", () => {
+    expect(resizeEdgeAt(short, 100)).toBeNull()
+    expect(resizeEdgeAt(short, 105)).toBeNull()
+    expect(resizeEdgeAt(short, 108)).toBe("end")
+  })
+
+  it("ignores points outside the block", () => {
+    expect(resizeEdgeAt(tall, 99)).toBeNull()
+    expect(resizeEdgeAt(tall, 197)).toBeNull()
+  })
+})
+
+describe("computeResizeRange", () => {
+  const originalTz = getViewerTzid()
+  beforeEach(() => setViewerTzid("Europe/Stockholm"))
+  afterEach(() => setViewerTzid(originalTz))
+
+  const event = () => makeEvent(atTime(day("2025-07-15"), 14), atTime(day("2025-07-15"), 15))
+  const timed = (minutes: number, key = "2025-07-15") => ({
+    zone: "timed" as const,
+    day: day(key),
+    minutes,
+  })
+  const wallclocks = (range: { start: EventTime; end: EventTime } | null) =>
+    range && [wallclock(range.start), wallclock(range.end)]
+
+  it("drags the end to the snapped time under the pointer, keeping the start", () => {
+    const range = computeResizeRange(event(), timed(17 * 60 + 6), "end")
+    expect(wallclocks(range)).toEqual(["2025-07-15 14:00", "2025-07-15 17:00"])
+  })
+
+  it("drags the start, keeping the end", () => {
+    const range = computeResizeRange(event(), timed(12 * 60 + 23), "start")
+    expect(wallclocks(range)).toEqual(["2025-07-15 12:30", "2025-07-15 15:00"])
+  })
+
+  it("never makes the event shorter than one snap step", () => {
+    const end = computeResizeRange(event(), timed(9 * 60), "end")
+    expect(wallclocks(end)).toEqual(["2025-07-15 14:00", "2025-07-15 14:15"])
+
+    const start = computeResizeRange(event(), timed(18 * 60), "start")
+    expect(wallclocks(start)).toEqual(["2025-07-15 14:45", "2025-07-15 15:00"])
+  })
+
+  it("can drag the end past midnight onto a later day", () => {
+    const range = computeResizeRange(event(), timed(60, "2025-07-16"), "end")
+    expect(wallclocks(range)).toEqual(["2025-07-15 14:00", "2025-07-16 01:00"])
+  })
+
+  it("can drag the start onto an earlier day", () => {
+    const range = computeResizeRange(event(), timed(23 * 60, "2025-07-14"), "start")
+    expect(wallclocks(range)).toEqual(["2025-07-14 23:00", "2025-07-15 15:00"])
+  })
+
+  it("keeps the event's own timezone, moving its end by the viewer's minutes", () => {
+    // 13:00-14:00 in London is 14:00-15:00 for a viewer in Stockholm.
+    const london = (hour: number): EventTime => ({
+      kind: "datetime_zoned",
+      value: Temporal.ZonedDateTime.from({
+        timeZone: "Europe/London",
+        year: 2025,
+        month: 7,
+        day: 15,
+        hour,
+      }),
+    })
+    const range = computeResizeRange(makeEvent(london(13), london(14)), timed(16 * 60), "end")
+
+    expect(range?.end).toEqual(london(15))
+    expect(range?.start).toEqual(london(13))
+  })
+
+  it("does nothing when the snapped edge stays put, or off the time grid", () => {
+    expect(computeResizeRange(event(), timed(15 * 60 + 5), "end")).toBeNull()
+    expect(computeResizeRange(event(), timed(13 * 60 + 55), "start")).toBeNull()
+    expect(
+      computeResizeRange(
+        event(),
+        { zone: "all-day", day: day("2025-07-15"), minutes: null },
+        "end",
+      ),
+    ).toBeNull()
+    expect(
+      computeResizeRange(event(), { zone: "timed", day: day("2025-07-15"), minutes: null }, "end"),
     ).toBeNull()
   })
 })

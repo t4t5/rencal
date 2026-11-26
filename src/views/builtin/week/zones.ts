@@ -1,10 +1,15 @@
 import { Temporal } from "@js-temporal/polyfill"
 
+import type { TimeFormat } from "@/sdk"
+
+import { GUTTER_ZONE_WIDTH, GUTTER_ZONE_WIDTH_WIDE } from "./grid"
+
 /** A timezone's column in the time gutter. */
 export type GutterZone = {
   tzid: string
   /** The viewer's own zone: the one the grid's days and events are laid out in. */
   local: boolean
+  width: number
 }
 
 /** `hour` o'clock on `date` in the viewer's zone, as `tzid` reads it then. */
@@ -19,6 +24,17 @@ export function hourInZone(
     .toZonedDateTime({ timeZone: viewerTzid, plainTime: new Temporal.PlainTime(hour) })
     .withTimeZone(tzid)
   return { hour: there.hour, minute: there.minute }
+}
+
+/** A zone's column width: 12-hour labels only show minutes, and need the room, off the hour. */
+export function zoneColumnWidth(
+  date: Temporal.PlainDate,
+  viewerTzid: string,
+  tzid: string,
+  timeFormat: TimeFormat,
+): number {
+  const offHour = hourInZone(date, 12, viewerTzid, tzid).minute !== 0
+  return timeFormat === "12h" && offHour ? GUTTER_ZONE_WIDTH_WIDE : GUTTER_ZONE_WIDTH
 }
 
 const midday = (date: Temporal.PlainDate, tzid: string) =>

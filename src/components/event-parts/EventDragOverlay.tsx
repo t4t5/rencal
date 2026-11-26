@@ -13,17 +13,23 @@ import { getUserResponseStatus } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 /**
- * Full-window layer shown while an event is being dragged. It owns the grabbing
- * cursor and carries the floating copy of the event that follows the pointer.
- * Drop targets are hit-tested through it, so it never needs pointer events off.
+ * Full-window layer shown while an event is being dragged. It owns the cursor
+ * and, when moving, carries the floating copy of the event that follows the
+ * pointer; a resize stretches the event in place instead. Drop targets are
+ * hit-tested through it, so it never needs pointer events off.
  */
 export function EventDragOverlay() {
   const { drag } = useEventDrag()
   if (!drag) return null
 
   return (
-    <div className="fixed inset-0 z-50 cursor-grabbing select-none">
-      <DragFloatCard key={drag.sourceKey} drag={drag} />
+    <div
+      className={cn(
+        "fixed inset-0 z-50 select-none",
+        drag.resize ? "cursor-ns-resize" : "cursor-grabbing",
+      )}
+    >
+      {!drag.resize && <DragFloatCard key={drag.sourceKey} drag={drag} />}
     </div>
   )
 }
